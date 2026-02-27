@@ -138,6 +138,39 @@ server/services/eventGenerator.ts
 
 ---
 
+## Frontend Layout Strategy
+
+### Breakpoint Model
+
+All client components use **Tailwind v4 mobile-first breakpoints**. The default (no prefix) styles target mobile; larger screens are progressively enhanced.
+
+| Tailwind prefix | Viewport width | Layout intent |
+|---|---|---|
+| *(default)* | < 768 px | Full-screen map; `CluePanel` as collapsible drawer/overlay |
+| `md:` | ≥ 768 px | `CluePanel` visible as a persistent side strip or top banner |
+| `lg:` | ≥ 1024 px | Wider panel, larger typography, additional decorative elements |
+
+### Component Layout Rules
+
+**`GameBoard`**
+- On mobile: stack `MapView` (full-screen, `h-screen`) with `CluePanel` as a fixed bottom drawer.
+- On `md+`: render as a two-column flex/grid — map takes remaining space, panel takes a fixed width column.
+
+**`MapView`**
+- Must use Leaflet's built-in touch event handling — no mouse-only listeners.
+- The Leaflet container must fill its parent via `h-full w-full`; the parent controls the height.
+- Pin-drop must respond equally to `click` and `touchend` events. Use the react-leaflet `<MapContainer>` `useMapEvents` hook (via a child component) to intercept both.
+
+**`CluePanel`** (mobile drawer behaviour)
+- On mobile, renders at the bottom of the viewport, initially showing only the event year and a chevron toggle.
+- On expand: slides up to reveal the full clue text and the Submit button.
+- Submit button remains accessible at all viewport sizes without the player needing to scroll.
+
+**`ResultsOverlay`** and **`FinalScoreScreen`**
+- Render as modal-style overlays on mobile (full-screen or near-full-screen) to avoid map z-index conflicts with Leaflet.
+
+---
+
 ## Key Constraints
 
 | Constraint | Rationale |

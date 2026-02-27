@@ -106,6 +106,8 @@ Maximum total score: **25,000 points** (5 rounds)
 
 ## Non-Functional Requirements
 
-- Game must be playable in a desktop browser (Chrome, Firefox) at 1280×720+.
+- **Platform:** Mobile-first responsive web application. The game must be fully playable on modern mobile browsers (iOS Safari, Android Chrome) as the primary target, and equally functional on desktop (Chrome, Firefox) at 1280×720+.
+- **Mobile Experience:** On small screens (below the `md` Tailwind breakpoint, i.e. < 768 px), the `CluePanel` must render as a collapsible drawer or bottom-sheet overlay so the map occupies the full viewport. On `md` and above, the panel may be displayed side-by-side or in a persistent top/side strip.
+- **Touch input:** The Leaflet map must support touch-based pin-dropping (tap to place marker, tap again to move it). Mouse click and touch tap must behave identically.
 - API round-trip (guess → score response) must complete in < 500ms under normal conditions.
 - Map must render within 2 seconds on a standard broadband connection.

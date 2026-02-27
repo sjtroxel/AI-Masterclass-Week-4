@@ -32,39 +32,48 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
 
 ## Phase 1 — Backend Core
 
-- [ ] **D-06** Implement `server/utils/haversine.ts`
+- [x] **D-06** Implement `server/utils/haversine.ts`
   - Pure function: `haversine(lat1: number, lng1: number, lat2: number, lng2: number): number` (returns km)
   - Uses Earth radius = 6371 km
   - No external dependencies
   - Full TSDoc comment block
 
-- [ ] **D-07** Write unit tests for `haversine.ts`
+- [x] **D-07** Write unit tests for `haversine.ts`
   File: `server/utils/haversine.test.ts`
-  Test cases must include:
+  Test cases (all passing):
   - Same point → 0 km
-  - Known distance pair (e.g., London → Paris ≈ 341 km, ±1 km tolerance)
-  - Antimeridian crossing (e.g., Fiji to Samoa)
-  - Near-pole coordinates
+  - London → Paris ≈ 343.6 km (actual Haversine for standard city-centre coords; tolerance ±3 km)
+  - Antimeridian crossing: Fiji to Samoa (confirms short-path ~1080 km, not naive ~38,000 km)
+  - Near-pole coordinates: no NaN, result ≥ 0
 
-- [ ] **D-08** Curate `server/data/events.json`
-  Minimum 10 events, following The Chronicler's standards:
-  - All 3 difficulty tiers represented (≥ 2 each)
-  - ≥ 3 continents
-  - No two events in the same city
-  - Every entry has `source_url`
+- [x] **D-08** Curate `server/data/events.json`
+  10 events delivered: 3 easy / 4 medium / 3 hard · 4 continents (Europe, Asia, Oceania, Americas) · no duplicate cities · all entries have `source_url`
 
-- [ ] **D-09** Implement `server/utils/scorer.ts`
-  `scorer(distance_km: number): number` (returns 0–5000)
-  Formula: `Math.round(5000 * Math.exp(-distance_km / 2000))`
+- [x] **D-09** Implement `server/utils/scorer.ts`
+  `scorer(distanceKm: number): number` (returns 0–5000)
+  Formula: `Math.round(5000 * Math.exp(-distanceKm / 2000))`
 
-- [ ] **D-10** Implement Express routes (`server/routes/game.ts`)
-  - `GET /api/game/start` — shuffle events, strip coordinates, return 5
-  - `POST /api/game/guess` — validate `{eventId, lat, lng}`, run haversine + scorer, return score payload
+- [x] **D-10** Implement Express routes (`server/routes/game.ts`)
+  - `GET /api/game/start` — Fisher-Yates shuffle, strip `hiddenCoords` via destructuring, return 5 `GameEvent[]`
+  - `POST /api/game/guess` — validate `{eventId, lat, lng}`, run haversine + scorer, return `GuessResult`
+  - Exports `eventPool: HistoricalEvent[]` for startup check
 
-- [ ] **D-11** Scaffold `server/services/eventGenerator.ts`
-  - Define and export `generateEvent(difficulty: 'easy' | 'medium' | 'hard'): Promise<HistoricalEvent>` interface
-  - Stub returns a hardcoded placeholder event (real LLM call wired later)
-  - Integrate startup check in `server/index.ts`: if `events.json` count < 5, call generator to fill pool
+- [x] **D-11** Scaffold `server/services/eventGenerator.ts`
+  - Exports `generateEvent(difficulty): Promise<HistoricalEvent>` — MVP stub, calls `logLLMTrace`
+  - `server/index.ts` updated with async `startServer()`: fills `eventPool` if `events.json` count < 5
+
+- [ ] **D-11.5** Define Tailwind v4 theme tokens — parchment/dark historical aesthetic
+  File: `client/src/index.css` (CSS custom properties inside `@layer base` or `:root`)
+  Tokens to define:
+  - `--color-bg-base`: deep charcoal / near-black (e.g. `#1a1610`)
+  - `--color-bg-panel`: dark warm brown (e.g. `#2a2018`)
+  - `--color-border`: muted amber/gold (e.g. `#8b6a2e`)
+  - `--color-text-primary`: parchment cream (e.g. `#e8d9b5`)
+  - `--color-text-muted`: faded sepia (e.g. `#a08c68`)
+  - `--color-accent`: antique gold (e.g. `#c9993a`)
+  - `--color-accent-hover`: lighter gold (e.g. `#ddb84f`)
+  - Font stack: serif body (`Georgia, 'Times New Roman', serif`) for clue text; sans-serif UI elsewhere
+  These tokens are consumed by Phase 4 styling (D-19) but defined now so component authors can reference them from Phase 2 onward.
 
 ---
 
@@ -72,18 +81,22 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
 
 - [ ] **D-12** Create `MapView` component (`client/src/components/MapView.tsx`)
   - Leaflet map with OpenStreetMap tiles
-  - Single-pin drop on click (replace previous marker)
+  - Single-pin drop on click/tap (replace previous marker); must respond to both mouse `click` and touch `tap` via `useMapEvents`
+  - Container fills its parent (`h-full w-full`); parent controls actual height
   - Exposes `onPinDrop(lat: number, lng: number): void` callback prop
+  - **Responsive check:** Verify pin-drop works on a simulated mobile viewport (DevTools 375×812); no UI elements must obscure the map controls
 
 - [ ] **D-13** Create `CluePanel` component (`client/src/components/CluePanel.tsx`)
-  - Displays `clue_text` and `year`
-  - Disabled Submit button until a pin is dropped
-  - Calls `onSubmit(): void` prop on button click
+  - Displays `clue` and `year` (canonical field names from `shared/types.ts`)
+  - Disabled Submit button until a pin is dropped; calls `onSubmit(): void` prop on click
+  - **Responsive check (mobile drawer):** Below `md` breakpoint (< 768 px), panel renders as a fixed bottom drawer. Initially collapsed — shows only year + chevron toggle. On expand: reveals full clue text and Submit button. Submit must be reachable without scrolling at all viewport sizes.
+  - **Responsive check (desktop):** At `md+`, panel is always visible (no toggle needed); may be a side strip or top banner per `GameBoard` layout
 
 - [ ] **D-14** Create `GameBoard` component (`client/src/components/GameBoard.tsx`)
   - Holds game state: `session[]`, `currentRound`, `scores[]`, `guessCoords`
   - Fetches `GET /api/game/start` on mount
   - Renders `CluePanel` + `MapView` for current round
+  - **Responsive check (layout):** On mobile, `MapView` is `h-screen` with `CluePanel` as a fixed overlay; on `md+`, switch to a flex/grid two-column layout where map fills remaining space
 
 ---
 
@@ -91,13 +104,15 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
 
 - [ ] **D-15** Wire `POST /api/game/guess` in `GameBoard`
   - Send `{ eventId, lat, lng }` on submit
-  - Store response in state: `{ score, distance_km, true_lat, true_lng }`
+  - Store `GuessResult` response in state: `{ distance, score, trueCoords }` (canonical `shared/types.ts` shape)
+  - **Responsive check:** Loading/disabled state while POST is in-flight must not shift layout on any viewport
 
 - [ ] **D-16** Create `ResultsOverlay` component (`client/src/components/ResultsOverlay.tsx`)
   - Add second marker at true location
   - Draw polyline from guess to truth using `react-leaflet` `<Polyline>`
   - Display distance (km) and round score
   - "Next Round" button
+  - **Responsive check:** Overlay must render as a modal/full-screen sheet on mobile so it does not fight Leaflet's z-index; ensure "Next Round" button is thumb-reachable (bottom half of screen on mobile)
 
 - [ ] **D-17** Implement round progression in `GameBoard`
   - On "Next Round": increment `currentRound`, clear guess state

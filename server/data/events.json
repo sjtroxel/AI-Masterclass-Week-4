@@ -1,0 +1,92 @@
+[
+  {
+    "id": "berlin-wall-1989",
+    "year": 1989,
+    "locationName": "Brandenburg Gate, Berlin, Germany",
+    "clue": "On a November night, jubilant crowds dismantled a concrete barrier that had divided a once-great central European capital for nearly three decades, as the guards on both sides stood down and families reunited for the first time in a generation.",
+    "hiddenCoords": { "lat": 52.5163, "lng": 13.3777 },
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Fall_of_the_Berlin_Wall"
+  },
+  {
+    "id": "sarajevo-1914",
+    "year": 1914,
+    "locationName": "Latin Bridge, Sarajevo, Bosnia and Herzegovina",
+    "clue": "In a narrow street beside a river bridge in an old Austro-Hungarian provincial capital, a young nationalist fired the shots that would ignite a continental war and redraw the map of an entire empire.",
+    "hiddenCoords": { "lat": 43.8563, "lng": 18.4131 },
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Assassination_of_Archduke_Franz_Ferdinand"
+  },
+  {
+    "id": "battle-hastings-1066",
+    "year": 1066,
+    "locationName": "Battle, East Sussex, England",
+    "clue": "On the chalky ridge of a southern island coast, a duke from across a narrow channel routed the last of a line of island-born kings, forever altering the language, law, and nobility of the realm he had seized.",
+    "hiddenCoords": { "lat": 50.9149, "lng": 0.4894 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Battle_of_Hastings"
+  },
+  {
+    "id": "sydney-opera-1973",
+    "year": 1973,
+    "locationName": "Sydney Opera House, Sydney, Australia",
+    "clue": "Beside a great natural harbour crowned by an arching steel span, a revolutionary concert hall of interlocking shell vaults opened its doors after more than a decade of cost overruns, political scandal, and the resignation of its visionary architect.",
+    "hiddenCoords": { "lat": -33.8568, "lng": 151.2153 },
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Sydney_Opera_House"
+  },
+  {
+    "id": "hiroshima-1945",
+    "year": 1945,
+    "locationName": "Hiroshima Peace Memorial, Hiroshima, Japan",
+    "clue": "On a clear summer morning over a mid-sized port city spread across river delta islands, a single aircraft released a weapon of unprecedented destructive force, instantly incinerating the city centre and inaugurating the nuclear age.",
+    "hiddenCoords": { "lat": 34.3917, "lng": 132.4534 },
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Atomic_bombings_of_Hiroshima_and_Nagasaki"
+  },
+  {
+    "id": "bastille-1789",
+    "year": 1789,
+    "locationName": "Place de la Bastille, Paris, France",
+    "clue": "On a sweltering July afternoon, tradespeople and mutinous soldiers stormed a medieval fortress-prison that had stood as a symbol of royal authority for centuries, seizing its small garrison and few prisoners, and touching off a revolution that would reshape the western world.",
+    "hiddenCoords": { "lat": 48.8533, "lng": 2.3692 },
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Storming_of_the_Bastille"
+  },
+  {
+    "id": "kitty-hawk-1903",
+    "year": 1903,
+    "locationName": "Kill Devil Hills, North Carolina, USA",
+    "clue": "On the wind-scoured dunes of a barrier island along the eastern seaboard of a young republic, two brothers who built and repaired bicycles for a living achieved twelve seconds of sustained, controlled, powered flight in a craft heavier than air.",
+    "hiddenCoords": { "lat": 36.0165, "lng": -75.6634 },
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Wright_Flyer"
+  },
+  {
+    "id": "caesar-44bc",
+    "year": -44,
+    "locationName": "Largo di Torre Argentina, Rome, Italy",
+    "clue": "On the Ides of March, in a colonnaded theatre complex that also served as a meeting hall for the ancient world's most powerful deliberative body, a coalition of senators surrounded the republic's most formidable general and struck him down with concealed blades.",
+    "hiddenCoords": { "lat": 41.8948, "lng": 12.4766 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Assassination_of_Julius_Caesar"
+  },
+  {
+    "id": "chernobyl-1986",
+    "year": 1986,
+    "locationName": "Chernobyl Nuclear Power Plant, Ukraine",
+    "clue": "In the early hours of an April morning, a safety test at a graphite-moderated reactor in a vast empire's northern territory spiralled out of control, triggering a meltdown that scattered radioactive material across the continent and forced the permanent evacuation of a nearby planned city.",
+    "hiddenCoords": { "lat": 51.273, "lng": 30.2236 },
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Chernobyl_disaster"
+  },
+  {
+    "id": "machu-picchu-1450",
+    "year": 1450,
+    "locationName": "Machu Picchu, Cusco Region, Peru",
+    "clue": "High above a winding river gorge in the cloud-draped mountains of a great sun-worshipping empire, stonemasons fitted massive granite blocks without mortar to build a royal retreat that would be abandoned within a century and remain unknown to the outside world for three hundred years.",
+    "hiddenCoords": { "lat": -13.1631, "lng": -72.545 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Machu_Picchu"
+  }
+]
