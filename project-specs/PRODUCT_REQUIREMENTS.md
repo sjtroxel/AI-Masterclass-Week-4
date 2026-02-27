@@ -96,7 +96,7 @@ Maximum total score: **25,000 points** (5 rounds)
 
 ## Constraints & Standards
 
-- **Haversine utility** must be a standalone, side-effect-free function in `server/utils/haversine.js` with its own unit tests. No external geo libraries.
+- **Haversine utility** must be a standalone, side-effect-free function in `server/utils/haversine.ts` with its own unit tests. No external geo libraries.
 - **Clues must never contain place names.** The Chronicler persona is responsible for obfuscation.
 - **Every event must have a verifiable primary source** (Wikipedia URL minimum).
 - **Events seed file** (`server/data/events.json`) must contain ≥ 10 events spanning at least 3 continents and all 3 difficulty tiers.

@@ -8,34 +8,38 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
 
 ## Phase 0 — Project Scaffold
 
-- [ ] **D-01** Scaffold the React client with Vite
-  `npm create vite@latest client --template react` from project root
+- [x] **D-01** Scaffold the React client with Vite (TypeScript template)
+  `npx create-vite@latest client --template react-ts` from project root
+  Note: additional tsconfig split (`tsconfig.app.json` + `tsconfig.node.json`) applied manually.
 
-- [ ] **D-02** Scaffold the Express server
-  `mkdir server && cd server && npm init -y && npm install express cors`
+- [x] **D-02** Scaffold the Express server with TypeScript
+  `mkdir server && cd server && npm init -y`
+  `npm install express cors`
+  `npm install --save-dev typescript ts-node-dev @types/express @types/cors @types/node`
 
-- [ ] **D-03** Install Tailwind CSS v4 in `client/`
-  Follow the official Tailwind v4 + Vite guide (CSS-first config via `@import "tailwindcss"` in CSS, no `tailwind.config.js`)
+- [x] **D-03** Install Tailwind CSS v4 in `client/`
+  CSS-first config via `@import "tailwindcss"` in `src/index.css`; plugin via `@tailwindcss/vite` in `vite.config.ts`. No `tailwind.config.js` needed.
 
-- [ ] **D-04** Install Leaflet in `client/`
-  `npm install leaflet react-leaflet` · Import Leaflet CSS in `main.jsx`
+- [x] **D-04** Install Leaflet in `client/`
+  `npm install leaflet react-leaflet` · Import Leaflet CSS in `main.tsx`
 
-- [ ] **D-05** Configure root-level dev orchestration
-  Create root `package.json` with `concurrently` script:
-  `"dev": "concurrently \"npm run dev --prefix client\" \"node server/index.js\""`
+- [x] **D-05** Configure root-level dev orchestration
+  Root `package.json` with `concurrently` script:
+  `"dev": "concurrently \"npm run dev --prefix client\" \"npm run dev --prefix server\""`
+  Server `dev` script: `ts-node-dev --respawn --transpile-only index.ts`
 
 ---
 
 ## Phase 1 — Backend Core
 
-- [ ] **D-06** Implement `server/utils/haversine.js`
-  - Pure function: `haversine(lat1, lng1, lat2, lng2) → number (km)`
+- [ ] **D-06** Implement `server/utils/haversine.ts`
+  - Pure function: `haversine(lat1: number, lng1: number, lat2: number, lng2: number): number` (returns km)
   - Uses Earth radius = 6371 km
   - No external dependencies
-  - Full JSDoc comment block
+  - Full TSDoc comment block
 
-- [ ] **D-07** Write unit tests for `haversine.js`
-  File: `server/utils/haversine.test.js`
+- [ ] **D-07** Write unit tests for `haversine.ts`
+  File: `server/utils/haversine.test.ts`
   Test cases must include:
   - Same point → 0 km
   - Known distance pair (e.g., London → Paris ≈ 341 km, ±1 km tolerance)
@@ -49,34 +53,34 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
   - No two events in the same city
   - Every entry has `source_url`
 
-- [ ] **D-09** Implement `server/utils/scorer.js`
-  `scorer(distance_km) → number (0–5000)`
+- [ ] **D-09** Implement `server/utils/scorer.ts`
+  `scorer(distance_km: number): number` (returns 0–5000)
   Formula: `Math.round(5000 * Math.exp(-distance_km / 2000))`
 
-- [ ] **D-10** Implement Express routes (`server/routes/game.js`)
+- [ ] **D-10** Implement Express routes (`server/routes/game.ts`)
   - `GET /api/game/start` — shuffle events, strip coordinates, return 5
   - `POST /api/game/guess` — validate `{eventId, lat, lng}`, run haversine + scorer, return score payload
 
-- [ ] **D-11** Scaffold `server/services/eventGenerator.js`
-  - Define and export `generateEvent(difficulty)` interface
+- [ ] **D-11** Scaffold `server/services/eventGenerator.ts`
+  - Define and export `generateEvent(difficulty: 'easy' | 'medium' | 'hard'): Promise<HistoricalEvent>` interface
   - Stub returns a hardcoded placeholder event (real LLM call wired later)
-  - Integrate startup check in `server/index.js`: if `events.json` count < 5, call generator to fill pool
+  - Integrate startup check in `server/index.ts`: if `events.json` count < 5, call generator to fill pool
 
 ---
 
 ## Phase 2 — Frontend Core
 
-- [ ] **D-12** Create `MapView` component (`client/src/components/MapView.jsx`)
+- [ ] **D-12** Create `MapView` component (`client/src/components/MapView.tsx`)
   - Leaflet map with OpenStreetMap tiles
   - Single-pin drop on click (replace previous marker)
-  - Exposes `onPinDrop(lat, lng)` callback prop
+  - Exposes `onPinDrop(lat: number, lng: number): void` callback prop
 
-- [ ] **D-13** Create `CluePanel` component (`client/src/components/CluePanel.jsx`)
+- [ ] **D-13** Create `CluePanel` component (`client/src/components/CluePanel.tsx`)
   - Displays `clue_text` and `year`
   - Disabled Submit button until a pin is dropped
-  - Calls `onSubmit()` prop on button click
+  - Calls `onSubmit(): void` prop on button click
 
-- [ ] **D-14** Create `GameBoard` component (`client/src/components/GameBoard.jsx`)
+- [ ] **D-14** Create `GameBoard` component (`client/src/components/GameBoard.tsx`)
   - Holds game state: `session[]`, `currentRound`, `scores[]`, `guessCoords`
   - Fetches `GET /api/game/start` on mount
   - Renders `CluePanel` + `MapView` for current round
@@ -89,7 +93,7 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
   - Send `{ eventId, lat, lng }` on submit
   - Store response in state: `{ score, distance_km, true_lat, true_lng }`
 
-- [ ] **D-16** Create `ResultsOverlay` component (`client/src/components/ResultsOverlay.jsx`)
+- [ ] **D-16** Create `ResultsOverlay` component (`client/src/components/ResultsOverlay.tsx`)
   - Add second marker at true location
   - Draw polyline from guess to truth using `react-leaflet` `<Polyline>`
   - Display distance (km) and round score
@@ -99,7 +103,7 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
   - On "Next Round": increment `currentRound`, clear guess state
   - After round 5: transition to `FinalScoreScreen`
 
-- [ ] **D-18** Create `FinalScoreScreen` component (`client/src/components/FinalScoreScreen.jsx`)
+- [ ] **D-18** Create `FinalScoreScreen` component (`client/src/components/FinalScoreScreen.tsx`)
   - Display total score (sum of all round scores)
   - Per-round breakdown table: round, distance, score
   - "Play Again" button resets state and re-fetches `/api/game/start`

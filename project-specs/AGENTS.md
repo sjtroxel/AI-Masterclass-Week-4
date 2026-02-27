@@ -51,7 +51,7 @@ This document defines the two specialized internal personas used during developm
    - `medium` — Significant but less globally famous events (regional conflicts, scientific discoveries, explorations)
    - `hard` — Obscure events requiring deep historical knowledge, unusual locations
 4. **Validate** that every event's coordinates are accurate before adding to `events.json`.
-5. **Define and maintain the EventGenerator interface** (`server/services/eventGenerator.js`): specifies the shape of LLM prompts and validates that generated events conform to the `HistoricalEvent` schema before use.
+5. **Define and maintain the EventGenerator interface** (`server/services/eventGenerator.ts`): specifies the shape of LLM prompts and validates that generated events conform to the `HistoricalEvent` schema before use.
 
 **Obfuscation Examples:**
 

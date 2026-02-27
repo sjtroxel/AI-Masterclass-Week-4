@@ -1,6 +1,6 @@
-const express = require('express');
-const cors = require('cors');
-const gameRouter = require('./routes/game');
+import express from 'express';
+import cors from 'cors';
+import gameRouter from './routes/game';
 
 const app = express();
 const PORT = 3001;

@@ -14,26 +14,27 @@ Communication is via JSON REST API over HTTP. The frontend never receives event 
 ## Component Map
 
 ```
-client/ (The Map — React/Vite)
+client/ (The Map — React/Vite/TypeScript)
 ├── src/
 │   ├── components/
-│   │   ├── GameBoard.jsx        # Root orchestrator: manages round index & game state
-│   │   ├── CluePanel.jsx        # Displays clue_text, year; contains Submit button
-│   │   ├── MapView.jsx          # Leaflet map, handles single pin-drop
-│   │   ├── ResultsOverlay.jsx   # Polyline, distance, round score post-guess
-│   │   └── FinalScoreScreen.jsx # Total score, per-round breakdown, Play Again
-│   ├── App.jsx
-│   └── main.jsx
+│   │   ├── GameBoard.tsx        # Root orchestrator: manages round index & game state
+│   │   ├── CluePanel.tsx        # Displays clue_text, year; contains Submit button
+│   │   ├── MapView.tsx          # Leaflet map, handles single pin-drop
+│   │   ├── ResultsOverlay.tsx   # Polyline, distance, round score post-guess
+│   │   └── FinalScoreScreen.tsx # Total score, per-round breakdown, Play Again
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── vite-env.d.ts            # Vite client type declarations (SVG imports, etc.)
 
-server/ (The Brain — Node/Express)
-├── index.js                    # Entry point: loads events, starts server
+server/ (The Brain — Node/Express/TypeScript)
+├── index.ts                    # Entry point: loads events, starts server
 ├── routes/
-│   └── game.js                 # GET /api/game/start, POST /api/game/guess
+│   └── game.ts                 # GET /api/game/start, POST /api/game/guess
 ├── utils/
-│   ├── haversine.js            # Pure Haversine function — standalone, tested
-│   └── scorer.js               # Wraps haversine, applies scoring formula
+│   ├── haversine.ts            # Pure Haversine function — standalone, tested
+│   └── scorer.ts               # Wraps haversine, applies scoring formula
 ├── services/
-│   └── eventGenerator.js       # LLM-backed event generator (fallback slot)
+│   └── eventGenerator.ts       # LLM-backed event generator (fallback slot)
 └── data/
     └── events.json             # Curated seed file (≥ 10 verified events)
 ```
@@ -120,14 +121,14 @@ Page load
 ## EventGenerator Service
 
 ```
-server/services/eventGenerator.js
+server/services/eventGenerator.ts
 ```
 
 **Purpose:** Provides a fallback event source when `events.json` has fewer than 5 entries. Keeps the API contract (`GET /api/game/start`) stable regardless of seed-data quantity.
 
 **Interface:**
-```javascript
-// generateEvent(difficulty: 'easy'|'medium'|'hard') → Promise<HistoricalEvent>
+```typescript
+// generateEvent(difficulty: 'easy' | 'medium' | 'hard'): Promise<HistoricalEvent>
 // HistoricalEvent shape matches an events.json record exactly.
 ```
 
