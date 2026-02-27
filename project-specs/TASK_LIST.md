@@ -62,29 +62,28 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
   - Exports `generateEvent(difficulty): Promise<HistoricalEvent>` — MVP stub, calls `logLLMTrace`
   - `server/index.ts` updated with async `startServer()`: fills `eventPool` if `events.json` count < 5
 
-- [ ] **D-11.5** Define Tailwind v4 theme tokens — parchment/dark historical aesthetic
-  File: `client/src/index.css` (CSS custom properties inside `@layer base` or `:root`)
-  Tokens to define:
-  - `--color-bg-base`: deep charcoal / near-black (e.g. `#1a1610`)
-  - `--color-bg-panel`: dark warm brown (e.g. `#2a2018`)
-  - `--color-border`: muted amber/gold (e.g. `#8b6a2e`)
-  - `--color-text-primary`: parchment cream (e.g. `#e8d9b5`)
-  - `--color-text-muted`: faded sepia (e.g. `#a08c68`)
-  - `--color-accent`: antique gold (e.g. `#c9993a`)
-  - `--color-accent-hover`: lighter gold (e.g. `#ddb84f`)
-  - Font stack: serif body (`Georgia, 'Times New Roman', serif`) for clue text; sans-serif UI elsewhere
-  These tokens are consumed by Phase 4 styling (D-19) but defined now so component authors can reference them from Phase 2 onward.
+- [x] **D-11.5** Define Tailwind v4 theme tokens — parchment/dark historical aesthetic
+  File: `client/src/index.css`
+  Delivered via `@theme { }` block (Tailwind v4 CSS-first config). Tokens defined:
+  `--color-bg-base/panel/surface`, `--color-trim/trim-muted`, `--color-text-primary/muted/dim`,
+  `--color-accent/accent-hover/accent-dim`, `--font-clue` (Georgia serif), `--font-ui` (system sans).
+  `@layer base` sets full-height layout + default bg/color/font on `html, body, #root`.
+  Note: `--color-trim` used instead of `--color-border` to avoid naming collision with Tailwind's
+  built-in `border-*` utilities.
+  Also: installed `@types/leaflet` as a devDependency (required by D-12).
 
 ---
 
 ## Phase 2 — Frontend Core
 
-- [ ] **D-12** Create `MapView` component (`client/src/components/MapView.tsx`)
-  - Leaflet map with OpenStreetMap tiles
-  - Single-pin drop on click/tap (replace previous marker); must respond to both mouse `click` and touch `tap` via `useMapEvents`
-  - Container fills its parent (`h-full w-full`); parent controls actual height
-  - Exposes `onPinDrop(lat: number, lng: number): void` callback prop
-  - **Responsive check:** Verify pin-drop works on a simulated mobile viewport (DevTools 375×812); no UI elements must obscure the map controls
+- [x] **D-12** Create `MapView` component (`client/src/components/MapView.tsx`)
+  - `MapContainer` (OSM tiles, center `[20,0]`, zoom 2, `minZoom 2`, `worldCopyJump: true`)
+  - `PinDropHandler` child component uses `useMapEvents({ click })` — Leaflet normalises touch to click; 300ms debounce prevents ghost-click double-fire
+  - Container `h-full w-full`, `zIndex: 0`; parent controls height
+  - Named export `MapView` with `onPinDrop(lat, lng)` prop; single pin replaces previous via `useState<LatLng|null>`
+  - Leaflet default icon fix applied at module scope (Vite bundler compatibility)
+  - `@types/leaflet` installed as devDependency; `tsc -b --noEmit` passes clean
+  - **Chronicler reviewed:** No server data, no hiddenCoords, no events.json imported — coordinate privacy clean
 
 - [ ] **D-13** Create `CluePanel` component (`client/src/components/CluePanel.tsx`)
   - Displays `clue` and `year` (canonical field names from `shared/types.ts`)

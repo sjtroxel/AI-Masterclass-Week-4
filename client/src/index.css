@@ -1,1 +1,53 @@
 @import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ChronoQuizzr — Historical Dark Theme
+   Tailwind v4 design tokens. These CSS custom properties become utility classes:
+     --color-bg-base   →  bg-bg-base, text-bg-base, border-bg-base …
+     --color-accent    →  bg-accent, text-accent, border-accent …
+     --font-clue       →  font-clue
+     --font-ui         →  font-ui
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Backgrounds */
+  --color-bg-base:    #1a1610; /* Deep charcoal — page base */
+  --color-bg-panel:   #2a2018; /* Warm dark brown — CluePanel, overlays */
+  --color-bg-surface: #352a1e; /* Slightly lighter — hover states, cards */
+
+  /* Borders & dividers */
+  --color-trim:       #8b6a2e; /* Muted amber — panel edges, decorative rules */
+  --color-trim-muted: #4a3a1e; /* Dark amber — subtle inner borders */
+
+  /* Text */
+  --color-text-primary: #e8d9b5; /* Parchment cream — body copy, clues */
+  --color-text-muted:   #a08c68; /* Faded sepia — secondary labels, metadata */
+  --color-text-dim:     #6b5a3e; /* Dark sepia — disabled states */
+
+  /* Accent (interactive elements) */
+  --color-accent:       #c9993a; /* Antique gold — buttons, active markers */
+  --color-accent-hover: #ddb84f; /* Lighter gold — button hover */
+  --color-accent-dim:   #7a5c1e; /* Dark gold — disabled accent */
+
+  /* Typography */
+  --font-clue: Georgia, 'Times New Roman', serif;
+  --font-ui:   system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Base layer — full-height layout, default colour and font application.
+   Must come after @theme so custom properties are resolved.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    font-family: var(--font-ui);
+  }
+}
