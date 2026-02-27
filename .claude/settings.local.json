@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 << 'PYTHON_EOF'\nimport zipfile\n\n# Extract ai-onboard.skill\nonboard_path = \"/home/sjtroxel/chrono-quizzr/ai-masterclass-skills/skills/ai-onboard.skill\"\nwith zipfile.ZipFile\\(onboard_path, 'r'\\) as zip_ref:\n    content = zip_ref.read\\('ai-onboard/SKILL.md'\\).decode\\('utf-8'\\)\n    print\\(\"=\" * 80\\)\n    print\\(\"AI-ONBOARD.SKILL - SKILL.md Contents:\"\\)\n    print\\(\"=\" * 80\\)\n    print\\(content\\)\nPYTHON_EOF)"
+    ]
+  }
+}
