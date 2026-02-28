@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import type { GameEvent, Guess, GuessResult } from '@shared/types'
 import { MapView } from './MapView'
 import { CluePanel } from './CluePanel'
+import { ResultsOverlay } from './ResultsOverlay'
+import { FinalScoreScreen } from './FinalScoreScreen'
 
 // ─── Chronicler audit note ────────────────────────────────────────────────────
 // All coordinate privacy rules enforced here:
@@ -56,6 +58,10 @@ export function GameBoard() {
   const [roundResult, setRoundResult] = useState<GuessResult | null>(null)
   const [gamePhase, setGamePhase] = useState<GamePhase>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  // Per-round history for FinalScoreScreen breakdown table.
+  // Appended inside handleNextRound() before any phase transition so that
+  // round 5's entry is captured even when transitioning directly to 'finished'.
+  const [roundHistory, setRoundHistory] = useState<Array<{ score: number; distance: number }>>([])
   // Incrementing fetchKey re-triggers the session load effect (used by Play Again / retry).
   const [fetchKey, setFetchKey] = useState(0)
 
@@ -75,6 +81,7 @@ export function GameBoard() {
           setTotalScore(0)
           setGuessCoords(null)
           setRoundResult(null)
+          setRoundHistory([])
           setGamePhase('playing')
         }
       } catch (err) {
@@ -132,6 +139,13 @@ export function GameBoard() {
   }
 
   function handleNextRound() {
+    // Append this round's result to history BEFORE any phase transition.
+    // This guarantees round 5's entry is captured when isFinalRound is true
+    // and we transition directly to 'finished' without another render cycle.
+    if (roundResult !== null) {
+      setRoundHistory((prev) => [...prev, { score: roundResult.score, distance: roundResult.distance }])
+    }
+
     if (currentRound >= session.length - 1) {
       setGamePhase('finished')
       return
@@ -177,21 +191,13 @@ export function GameBoard() {
   }
 
   // ── Render: finished ──────────────────────────────────────────────────────
-  // TODO D-18: Replace this with <FinalScoreScreen> component.
   if (gamePhase === 'finished') {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-bg-base gap-6 p-8">
-        <p className="font-ui text-text-muted text-xs tracking-widest uppercase">
-          Game Complete
-        </p>
-        <p className="font-clue text-text-primary text-6xl font-bold">
-          {totalScore.toLocaleString()}
-        </p>
-        <p className="font-ui text-text-muted text-sm">out of 25,000 points</p>
-        <button onClick={handlePlayAgain} className={btnClass}>
-          Play Again
-        </button>
-      </div>
+      <FinalScoreScreen
+        totalScore={totalScore}
+        roundHistory={roundHistory}
+        onPlayAgain={handlePlayAgain}
+      />
     )
   }
 
@@ -199,11 +205,13 @@ export function GameBoard() {
   return (
     <div className="relative h-full flex flex-col md:flex-row overflow-hidden">
 
-      {/* Map — fills remaining space; controlled pin via guessCoords */}
+      {/* Map — fills remaining space; controlled pin via guessCoords.
+          revealCoords is null during play, set to trueCoords after scoring. */}
       <div className="flex-1 min-h-0">
         <MapView
           onPinDrop={handlePinDrop}
           pinCoords={guessCoords}
+          revealCoords={roundResult?.trueCoords ?? null}
         />
       </div>
 
@@ -221,49 +229,20 @@ export function GameBoard() {
         )}
       </div>
 
-      {/* ── Round result overlay ────────────────────────────────────────────
-          Rendered on top of the map after a guess is scored.
-          TODO D-16: Replace with <ResultsOverlay> showing polyline + markers.
+      {/* ── ResultsOverlay ──────────────────────────────────────────────────
+          Rendered after a guess is scored. Uses fixed z-[1000] internally
+          so it sits above all Leaflet layers regardless of this stacking context.
+          currentEvent is guaranteed non-null when gamePhase === 'result'.
       ─────────────────────────────────────────────────────────────────────── */}
-      {gamePhase === 'result' && roundResult !== null && (
-        <div className="
-          absolute inset-0 z-20
-          flex items-end md:items-center justify-center
-          bg-black/60 backdrop-blur-sm
-          p-4
-        ">
-          <div className="
-            bg-bg-panel border border-trim rounded
-            p-6 w-full max-w-sm
-            flex flex-col gap-4
-            shadow-[0_8px_40px_rgba(0,0,0,0.6)]
-          ">
-            <p className="font-ui text-text-muted text-xs tracking-widest uppercase">
-              Round {currentRound + 1} of {session.length}
-            </p>
-
-            <div className="flex flex-col gap-1">
-              <p className="font-clue text-text-primary text-4xl font-bold">
-                {roundResult.score.toLocaleString()}
-                <span className="font-ui text-text-muted text-base font-normal ml-2">pts</span>
-              </p>
-              <p className="font-ui text-text-muted text-sm">
-                {roundResult.distance} km from the true location
-              </p>
-            </div>
-
-            <hr className="border-trim-muted" />
-
-            <div className="flex items-center justify-between">
-              <p className="font-ui text-text-muted text-xs">
-                Total: {totalScore.toLocaleString()} pts
-              </p>
-              <button onClick={handleNextRound} className={btnClass}>
-                {currentRound >= session.length - 1 ? 'Final Score →' : 'Next Round →'}
-              </button>
-            </div>
-          </div>
-        </div>
+      {gamePhase === 'result' && roundResult !== null && currentEvent !== null && (
+        <ResultsOverlay
+          result={roundResult}
+          event={currentEvent}
+          round={currentRound + 1}
+          totalRounds={session.length}
+          totalScore={totalScore}
+          onNext={handleNextRound}
+        />
       )}
     </div>
   )
