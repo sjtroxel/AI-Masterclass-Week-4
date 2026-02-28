@@ -62,6 +62,11 @@ export function GameBoard() {
   // Appended inside handleNextRound() before any phase transition so that
   // round 5's entry is captured even when transitioning directly to 'finished'.
   const [roundHistory, setRoundHistory] = useState<Array<{ score: number; distance: number }>>([])
+  // Shown inline in CluePanel when the POST /api/game/guess request fails.
+  // Cleared on the next submission attempt and on round transitions.
+  // Does NOT trigger gamePhase='error' — the round stays live so the player
+  // can retry with the same pin without losing their progress.
+  const [submitError, setSubmitError] = useState<string | null>(null)
   // Incrementing fetchKey re-triggers the session load effect (used by Play Again / retry).
   const [fetchKey, setFetchKey] = useState(0)
 
@@ -110,6 +115,7 @@ export function GameBoard() {
 
   async function submitGuess() {
     if (currentEvent === null || guessCoords === null) return
+    setSubmitError(null)   // clear any previous inline error before each attempt
     setGamePhase('submitting')
 
     const body: Guess = {
@@ -133,8 +139,12 @@ export function GameBoard() {
       setTotalScore((prev) => prev + result.score)
       setGamePhase('result')
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Submission failed.')
-      setGamePhase('error')
+      // Stay in 'playing' — the pin is preserved and the button re-enables.
+      // Surface the failure inline in CluePanel rather than blowing away the
+      // game screen. gamePhase='error' is reserved for session fetch failures.
+      const message = err instanceof Error ? err.message : 'Submission failed.'
+      setSubmitError(`Connection error — ${message}. Please try again.`)
+      setGamePhase('playing')
     }
   }
 
@@ -153,6 +163,7 @@ export function GameBoard() {
     setCurrentRound((r) => r + 1)
     setGuessCoords(null)   // clears the MapView pin (controlled prop)
     setRoundResult(null)
+    setSubmitError(null)
     setGamePhase('playing')
   }
 
@@ -225,6 +236,7 @@ export function GameBoard() {
             hasPin={guessCoords !== null}
             onSubmit={handleSubmit}
             isSubmitting={gamePhase === 'submitting'}
+            submitError={submitError}
           />
         )}
       </div>

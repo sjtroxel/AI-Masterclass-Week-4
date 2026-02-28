@@ -101,44 +101,59 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
 
 ## Phase 3 — Results & Scoring
 
-- [ ] **D-15** Wire `POST /api/game/guess` in `GameBoard`
+- [x] **D-15** Wire `POST /api/game/guess` in `GameBoard`
   - Send `{ eventId, lat, lng }` on submit
   - Store `GuessResult` response in state: `{ distance, score, trueCoords }` (canonical `shared/types.ts` shape)
-  - **Responsive check:** Loading/disabled state while POST is in-flight must not shift layout on any viewport
+  - Implemented as part of D-14; wired and confirmed in Phase 3 review.
 
-- [ ] **D-16** Create `ResultsOverlay` component (`client/src/components/ResultsOverlay.tsx`)
-  - Add second marker at true location
-  - Draw polyline from guess to truth using `react-leaflet` `<Polyline>`
-  - Display distance (km) and round score
-  - "Next Round" button
-  - **Responsive check:** Overlay must render as a modal/full-screen sheet on mobile so it does not fight Leaflet's z-index; ensure "Next Round" button is thumb-reachable (bottom half of screen on mobile)
+- [x] **D-16** Create `ResultsOverlay` component (`client/src/components/ResultsOverlay.tsx`)
+  - `CircleMarker` at true location + dashed amber `Polyline` from guess to truth (both inside MapView via `revealCoords` prop)
+  - Score card: distance, round score, running total, `locationName` reveal, `source_url` link
+  - Fixed `z-[1000]` overlay (above Leaflet max ~700); bottom sheet mobile / centered modal `md+`
 
-- [ ] **D-17** Implement round progression in `GameBoard`
-  - On "Next Round": increment `currentRound`, clear guess state
-  - After round 5: transition to `FinalScoreScreen`
+- [x] **D-17** Implement round progression in `GameBoard`
+  - `handleNextRound()`: appends to `roundHistory` before phase transition (guarantees round 5 captured)
+  - After round 5: transitions to `FinalScoreScreen`
 
-- [ ] **D-18** Create `FinalScoreScreen` component (`client/src/components/FinalScoreScreen.tsx`)
-  - Display total score (sum of all round scores)
-  - Per-round breakdown table: round, distance, score
-  - "Play Again" button resets state and re-fetches `/api/game/start`
+- [x] **D-18** Create `FinalScoreScreen` component (`client/src/components/FinalScoreScreen.tsx`)
+  - "Round Logbook" ledger table: semantic `<table>` with `thead/tbody/tfoot`, alternating stripe rows
+  - "Play Again" uses `setFetchKey` increment — pure React state reset, no page refresh
 
 ---
 
 ## Phase 4 — Polish
 
-- [ ] **D-19** Apply Tailwind v4 styling — dark historical theme
-  - Dark background, parchment-toned text accents
-  - Consistent button styles, panel borders, typography scale
+- [x] **D-19** Apply 'Parchment & Inky' Tailwind v4 token polish across all components
+  - Year display upgraded to `font-clue text-xl/text-2xl font-bold` in both mobile handle and desktop panel
+  - Submit button disabled states split: `disabled:opacity-40` (no pin) vs `disabled:opacity-100` (in-flight)
+  - CluePanel outer div: `md:h-full` added so `bg-bg-panel` fills the full column height (no colour cut-off)
+  - ThemeToggle moved to `top-3 left-3` (was `right-3`, conflicted with difficulty badge)
 
-- [ ] **D-20** Add loading states
-  - Spinner in `GameBoard` while fetching session
-  - Disable Submit button and show loading indicator while guess POST is in-flight
+- [x] **D-19a** Implement Theme Toggle: Dark "Inky Night" / Light "Aged Map" modes
+  - **Mechanism:** `html.theme-light` class overrides CSS custom properties — zero JSX `dark:` prefixes needed
+  - **Context:** `client/src/context/ThemeContext.tsx` — `getInitialTheme()` resolves synchronously (localStorage → prefers-color-scheme: light → dark default); class set before first paint to prevent flash
+  - **Leaflet tiles (Cartographer):**
+    - Dark mode: `filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.9)` on `.leaflet-tile-pane`
+    - Light mode: `filter: sepia(0.3) brightness(0.96) saturate(0.8)` on `.leaflet-tile-pane`
+    - Attribution control in `.leaflet-control-container` is unaffected by tile filters ✓
+  - **Toggle UI:** `client/src/components/ThemeToggle.tsx` — `fixed top-3 left-3 z-900`, `bg-bg-panel/80 backdrop-blur-md border-trim/50` HUD pill
+  - **Light theme accent tokens (Chronicler-verified WCAG AA):**
+    - `--color-accent: #7c3d0f` (5.19:1 on bg-surface ✓) · `--color-accent-hover: #5c2e0a` (7.13:1 ✓)
+    - Hover direction reversed in light mode (darker = higher contrast on parchment)
+  - **Difficulty badge (Chronicler):** `useTheme()` in CluePanel; two static style maps — `*-400` pastels for dark, `*-700` ink variants for light
 
-- [ ] **D-21** Add error handling
-  - API fetch failures: display user-friendly error message with retry option
-  - Invalid guess coordinates: client-side validation before submit
+- [x] **D-20** Add loading states
+  - CSS spinner (`border-current border-t-transparent rounded-full animate-spin`) injected inline in Submit button when `isSubmitting`
+  - Button label: "Submit Guess" → "⟳ Scoring…" during in-flight POST
+  - `disabled:opacity-100 cursor-wait` overrides the no-pin `disabled:opacity-40` in the submitting state
 
-- [ ] **D-22** Verify Haversine edge cases end-to-end
-  - Guess at the exact true location → score = 5000
-  - Guess on opposite side of Earth → score ≈ 0
-  - Antimeridian polyline displays correctly on the Leaflet map
+- [x] **D-21** Add error handling
+  - POST `/api/game/guess` failure: `submitError` state surfaces inline in CluePanel (red text below button); game stays in `'playing'` phase — pin preserved, button re-enables immediately
+  - `gamePhase = 'error'` now reserved exclusively for session fetch failures (GET `/api/game/start`)
+  - `submitError` cleared on: next submission attempt, round transition, Play Again / retry
+
+- [x] **D-22** Verify Haversine edge cases end-to-end
+  - Perfect guess (0,0) → (0,0): distance = 0 km, score = **5,000** ✓
+  - Antipodal guess (0,0) → (0,180): distance = 20,015 km, score = **0** ✓
+  - Antimeridian polyline: `worldCopyJump: true` on MapContainer; Haversine formula handles antimeridian natively
+  - **Docstring correction:** `scorer.ts` table was wrong (matched k≈1000, not k=2000). Corrected to actual values: 500 km→3,894 · 1,000 km→3,033 · 10,000 km→34 · score hits 1 at ~16,300 km

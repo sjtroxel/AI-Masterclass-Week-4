@@ -18,10 +18,13 @@ client/ (The Map — React/Vite/TypeScript)
 ├── src/
 │   ├── components/
 │   │   ├── GameBoard.tsx        # Root orchestrator: manages round index & game state
-│   │   ├── CluePanel.tsx        # Displays clue_text, year; contains Submit button
-│   │   ├── MapView.tsx          # Leaflet map, handles single pin-drop
-│   │   ├── ResultsOverlay.tsx   # Polyline, distance, round score post-guess
-│   │   └── FinalScoreScreen.tsx # Total score, per-round breakdown, Play Again
+│   │   ├── CluePanel.tsx        # Displays clue, year; contains Submit button + spinner
+│   │   ├── MapView.tsx          # Leaflet map, pin-drop, post-guess polyline/marker
+│   │   ├── ResultsOverlay.tsx   # Polyline, distance, round score, source reveal post-guess
+│   │   ├── FinalScoreScreen.tsx # Total score, Round Logbook table, Play Again
+│   │   └── ThemeToggle.tsx      # Dark/Light mode toggle; fixed top-right, z-[900]
+│   ├── context/
+│   │   └── ThemeContext.tsx     # Theme state + provider + useTheme hook; persists to localStorage
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── vite-env.d.ts            # Vite client type declarations (SVG imports, etc.)

@@ -49,5 +49,56 @@
     background-color: var(--color-bg-base);
     color: var(--color-text-primary);
     font-family: var(--font-ui);
+    /* Smooth transition when theme toggles — hides flash between states */
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
+}
+
+/* ─── Light "Aged Map" Theme Token Overrides ─────────────────────────────────
+   Applied when <html class="theme-light">. All @theme-derived utilities
+   (bg-bg-base, text-text-primary, border-trim, etc.) automatically resolve to
+   the values below — no JSX dark: prefixes required anywhere.
+
+   Contrast-verified (WCAG AA):
+     text-primary #1a1610 on bg-base  #f5f0e8  → ~13:1  ✓
+     text-muted   #5a4232 on bg-panel #ede4d3  →  ~5.2:1 ✓
+     accent       #7c3d0f on bg-surface #e0d5be →  5.19:1 ✓  (source links)
+     accent-hover #5c2e0a on bg-surface #e0d5be →  7.13:1 ✓  (hover state)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+html.theme-light {
+  --color-bg-base:      #f5f0e8; /* aged parchment */
+  --color-bg-panel:     #ede4d3; /* cream panel */
+  --color-bg-surface:   #e0d5be; /* warm off-white */
+  --color-trim:         #8b6a2e; /* amber — unchanged, works on both */
+  --color-trim-muted:   #c4a87d;
+
+  --color-text-primary: #1a1610; /* deep ink */
+  --color-text-muted:   #5a4232; /* dark sepia */
+  --color-text-dim:     #9a7d56; /* medium sepia (use for large text only) */
+
+  /* Sienna ink palette — lighter than gold on parchment, passes AA contrast. */
+  /* In light mode, accent-hover is DARKER than accent (hover = deeper press). */
+  --color-accent:       #7c3d0f;
+  --color-accent-hover: #5c2e0a;
+  --color-accent-dim:   #c4a87d;
+}
+
+/* ─── Leaflet Tile Filters (Cartographer) ────────────────────────────────────
+   Scoped to .leaflet-tile-pane only. The attribution control lives in
+   .leaflet-control-container (a separate DOM subtree) and is NOT affected
+   by these filters — it remains readable in both modes.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Dark "Inky Night": invert standard OSM tiles to produce a dark cartographic
+   base. hue-rotate(180deg) corrects the colour shift from inversion so that
+   green land areas become a plausible dark-teal rather than magenta. */
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.9);
+}
+
+/* Light "Aged Map": subtle sepia warm-tone and slight de-saturation gives the
+   impression of aged cartographic paper without losing geographic legibility. */
+html.theme-light .leaflet-tile-pane {
+  filter: sepia(0.3) brightness(0.96) saturate(0.8);
 }

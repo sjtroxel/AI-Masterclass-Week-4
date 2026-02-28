@@ -217,9 +217,9 @@ client/src/components/FinalScoreScreen.tsx ← end-of-game summary
 | Phase | Status |
 |-------|--------|
 | Phase 0 — Project Scaffold | Complete |
-| Phase 1 — Backend Core | Pending |
-| Phase 2 — Frontend Core | Pending |
-| Phase 3 — Results & Scoring | Pending |
-| Phase 4 — Polish | Pending |
+| Phase 1 — Backend Core | Complete |
+| Phase 2 — Frontend Core | Complete |
+| Phase 3 — Results & Scoring | Complete |
+| Phase 4 — Polish | Complete |
 
 See `project-specs/TASK_LIST.md` for the D-## checklist.

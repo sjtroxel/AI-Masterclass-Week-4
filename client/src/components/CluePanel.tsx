@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { GameEvent } from '@shared/types'
+import { useTheme } from '../context/ThemeContext'
 
 // ─── Chronicler note ──────────────────────────────────────────────────────────
 // GameEvent also carries `locationName` and `source_url`. Neither is rendered
@@ -19,6 +20,10 @@ export interface CluePanelProps {
   onSubmit: () => void
   /** True while the POST /api/game/guess request is in-flight. */
   isSubmitting?: boolean
+  /** Set by GameBoard when the POST /api/game/guess request fails. Cleared on
+   *  the next attempt. Shown inline so the player can retry without losing
+   *  their pin or round progress. */
+  submitError?: string | null
 }
 
 /** Formats a year number for human display, handling BCE dates correctly. */
@@ -27,14 +32,25 @@ function formatYear(year: number): string {
 }
 
 /**
- * Static difficulty badge styles.
- * Defined as a plain object (not template strings) so Tailwind's scanner
- * can detect all class names at build time.
+ * Difficulty badge styles — two sets so both themes remain legible.
+ *
+ * Dark "Inky Night": 400-level pastels read well on the dark panel.
+ * Light "Aged Map":  400-level pastels wash out on cream; 700-level dark
+ *                    ink variants restore contrast against parchment.
+ *
+ * Plain objects (not template strings) keep all class names statically
+ * detectable by Tailwind's scanner at build time.
  */
-const difficultyStyles: Record<GameEvent['difficulty'], string> = {
+const difficultyStylesDark: Record<GameEvent['difficulty'], string> = {
   easy:   'border-emerald-700/60 text-emerald-400',
   medium: 'border-amber-600/60   text-amber-400',
   hard:   'border-red-800/60     text-red-400',
+}
+
+const difficultyStylesLight: Record<GameEvent['difficulty'], string> = {
+  easy:   'border-emerald-600/70 text-emerald-700',
+  medium: 'border-amber-500/70   text-amber-700',
+  hard:   'border-red-700/70     text-red-700',
 }
 
 /**
@@ -55,15 +71,18 @@ export function CluePanel({
   hasPin,
   onSubmit,
   isSubmitting = false,
+  submitError = null,
 }: CluePanelProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const { theme } = useTheme()
+  const difficultyStyles = theme === 'light' ? difficultyStylesLight : difficultyStylesDark
 
   const canSubmit = hasPin && !isSubmitting
 
   return (
     <div className="
       fixed bottom-0 left-0 right-0 z-10
-      md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto
+      md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:h-full
       bg-bg-panel
       border-t-2 border-trim md:border-t-0 md:border-l-2
       flex flex-col
@@ -89,7 +108,7 @@ export function CluePanel({
         aria-label={isOpen ? 'Collapse clue panel' : 'Expand clue panel'}
       >
         <div className="flex items-center gap-3">
-          <span className="font-ui text-xs tracking-widest uppercase">
+          <span className="font-clue text-xl text-text-primary font-bold">
             {formatYear(event.year)}
           </span>
           <span
@@ -133,7 +152,7 @@ export function CluePanel({
 
             {/* Year + difficulty — desktop only (mobile shows these in the handle) */}
             <div className="hidden md:flex items-center justify-between">
-              <span className="font-ui text-xs tracking-widest uppercase text-text-muted">
+              <span className="font-clue text-2xl text-text-primary font-bold">
                 {formatYear(event.year)}
               </span>
               <span
@@ -155,26 +174,50 @@ export function CluePanel({
               {event.clue}
             </p>
 
-            {/* Submit button */}
+            {/* Submit button
+                Two distinct disabled states:
+                  · No pin yet     → disabled:opacity-40  (faded — clearly unavailable)
+                  · In-flight POST → disabled:opacity-100 (full opacity — communicates work)
+                The spinner is a pure-CSS border animation; border-current inherits the
+                button's text-bg-base colour so it works in both themes automatically. */}
             <button
               onClick={onSubmit}
               disabled={!canSubmit}
-              className="
+              className={`
                 w-full py-3.5 px-8 mt-1
                 font-ui text-sm tracking-widest uppercase
                 rounded border
                 transition-all duration-200
                 bg-accent border-trim text-bg-base
                 hover:bg-accent-hover hover:border-accent
-                disabled:bg-accent-dim disabled:border-trim-muted
-                disabled:text-text-dim disabled:cursor-not-allowed
-              "
+                ${isSubmitting
+                  ? 'disabled:opacity-100 cursor-wait'
+                  : 'disabled:opacity-40 disabled:cursor-not-allowed'
+                }
+              `}
             >
-              {isSubmitting ? 'Scoring…' : 'Submit Guess'}
+              <span className="flex items-center justify-center gap-2">
+                {isSubmitting && (
+                  <span
+                    aria-hidden="true"
+                    className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0"
+                  />
+                )}
+                {isSubmitting ? 'Scoring…' : 'Submit Guess'}
+              </span>
             </button>
 
-            {/* Pin-drop nudge — appears only when no pin has been placed yet */}
-            {!hasPin && !isSubmitting && (
+            {/* Inline submit error — stays in 'playing' phase so the player
+                can retry with their existing pin. Shown above the nudge
+                text so layout doesn't shift when both are absent. */}
+            {submitError !== null && (
+              <p className="text-center font-ui text-xs text-red-400 tracking-wide">
+                {submitError}
+              </p>
+            )}
+
+            {/* Pin-drop nudge — appears only when no pin and no error */}
+            {!hasPin && !isSubmitting && submitError === null && (
               <p className="text-center font-ui text-xs text-text-muted tracking-wide">
                 Drop a pin on the map to enable submission
               </p>
