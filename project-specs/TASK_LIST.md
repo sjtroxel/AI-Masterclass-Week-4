@@ -85,13 +85,13 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
   - `@types/leaflet` installed as devDependency; `tsc -b --noEmit` passes clean
   - **Chronicler reviewed:** No server data, no hiddenCoords, no events.json imported — coordinate privacy clean
 
-- [ ] **D-13** Create `CluePanel` component (`client/src/components/CluePanel.tsx`)
+- [x] **D-13** Create `CluePanel` component (`client/src/components/CluePanel.tsx`)
   - Displays `clue` and `year` (canonical field names from `shared/types.ts`)
   - Disabled Submit button until a pin is dropped; calls `onSubmit(): void` prop on click
   - **Responsive check (mobile drawer):** Below `md` breakpoint (< 768 px), panel renders as a fixed bottom drawer. Initially collapsed — shows only year + chevron toggle. On expand: reveals full clue text and Submit button. Submit must be reachable without scrolling at all viewport sizes.
   - **Responsive check (desktop):** At `md+`, panel is always visible (no toggle needed); may be a side strip or top banner per `GameBoard` layout
 
-- [ ] **D-14** Create `GameBoard` component (`client/src/components/GameBoard.tsx`)
+- [x] **D-14** Create `GameBoard` component (`client/src/components/GameBoard.tsx`)
   - Holds game state: `session[]`, `currentRound`, `scores[]`, `guessCoords`
   - Fetches `GET /api/game/start` on mount
   - Renders `CluePanel` + `MapView` for current round

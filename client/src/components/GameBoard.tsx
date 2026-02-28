@@ -1,0 +1,270 @@
+import { useState, useEffect } from 'react'
+import type { GameEvent, Guess, GuessResult } from '@shared/types'
+import { MapView } from './MapView'
+import { CluePanel } from './CluePanel'
+
+// ─── Chronicler audit note ────────────────────────────────────────────────────
+// All coordinate privacy rules enforced here:
+//
+// 1. `session: GameEvent[]` — the server returns Omit<HistoricalEvent,'hiddenCoords'>.
+//    There is no path by which hiddenCoords can reach this array.
+//
+// 2. `guessCoords` — the player's own pin position. Not event data.
+//
+// 3. `roundResult: GuessResult | null` — initialised to null and only ever set
+//    by calling `setRoundResult(result)` inside the POST /api/game/guess
+//    response handler. `trueCoords` therefore cannot exist in client state until
+//    the server has already scored the guess and chosen to reveal it.
+//    This satisfies Rule 04 (coordinate privacy).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Dev API base — the Express server runs on :3001 in development.
+// Override via VITE_API_URL env variable for other environments.
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
+
+type GamePhase = 'loading' | 'playing' | 'submitting' | 'result' | 'finished' | 'error'
+
+/** Shared button style — mirrors the Submit button in CluePanel. */
+const btnClass = `
+  py-3 px-6
+  font-ui text-sm tracking-widest uppercase
+  rounded border border-trim
+  bg-accent text-bg-base
+  hover:bg-accent-hover hover:border-accent
+  transition-all duration-200
+  cursor-pointer
+`
+
+/**
+ * Root game orchestrator. Owns all game state and coordinates the
+ * MapView ↔ CluePanel ↔ backend interaction for all 5 rounds.
+ *
+ * State ownership:
+ *   `session`     — 5 GameEvent objects fetched once per game
+ *   `currentRound` — 0-indexed round counter (0–4)
+ *   `totalScore`  — running sum of round scores
+ *   `guessCoords` — player's current pin; passed as controlled prop to MapView;
+ *                   cleared to null on every round transition
+ *   `roundResult` — null until the POST /api/game/guess response arrives
+ *   `gamePhase`   — drives what the UI renders
+ */
+export function GameBoard() {
+  const [session, setSession] = useState<GameEvent[]>([])
+  const [currentRound, setCurrentRound] = useState(0)
+  const [totalScore, setTotalScore] = useState(0)
+  const [guessCoords, setGuessCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [roundResult, setRoundResult] = useState<GuessResult | null>(null)
+  const [gamePhase, setGamePhase] = useState<GamePhase>('loading')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  // Incrementing fetchKey re-triggers the session load effect (used by Play Again / retry).
+  const [fetchKey, setFetchKey] = useState(0)
+
+  // ── Session fetch ────────────────────────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadSession() {
+      setGamePhase('loading')
+      try {
+        const res = await fetch(`${API_BASE}/api/game/start`)
+        if (!res.ok) throw new Error(`Server responded ${res.status}`)
+        const data = await res.json() as GameEvent[]
+        if (!cancelled) {
+          setSession(data)
+          setCurrentRound(0)
+          setTotalScore(0)
+          setGuessCoords(null)
+          setRoundResult(null)
+          setGamePhase('playing')
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setErrorMessage(err instanceof Error ? err.message : 'Failed to load game.')
+          setGamePhase('error')
+        }
+      }
+    }
+
+    void loadSession()
+    return () => { cancelled = true }
+  }, [fetchKey])
+
+  // ── Derived state ────────────────────────────────────────────────────────
+  const currentEvent: GameEvent | null = session[currentRound] ?? null
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  function handlePinDrop(lat: number, lng: number) {
+    setGuessCoords({ lat, lng })
+  }
+
+  function handleSubmit() {
+    void submitGuess()
+  }
+
+  async function submitGuess() {
+    if (currentEvent === null || guessCoords === null) return
+    setGamePhase('submitting')
+
+    const body: Guess = {
+      eventId: currentEvent.id,
+      lat: guessCoords.lat,
+      lng: guessCoords.lng,
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/game/guess`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error(`Server responded ${res.status}`)
+      const result = await res.json() as GuessResult
+
+      // Chronicler: trueCoords enters state here — only after the server has
+      // scored the guess and chosen to reveal the true location.
+      setRoundResult(result)
+      setTotalScore((prev) => prev + result.score)
+      setGamePhase('result')
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Submission failed.')
+      setGamePhase('error')
+    }
+  }
+
+  function handleNextRound() {
+    if (currentRound >= session.length - 1) {
+      setGamePhase('finished')
+      return
+    }
+    setCurrentRound((r) => r + 1)
+    setGuessCoords(null)   // clears the MapView pin (controlled prop)
+    setRoundResult(null)
+    setGamePhase('playing')
+  }
+
+  function handlePlayAgain() {
+    setFetchKey((k) => k + 1)  // re-triggers the session fetch effect
+  }
+
+  function handleRetry() {
+    setErrorMessage(null)
+    setFetchKey((k) => k + 1)
+  }
+
+  // ── Render: loading ───────────────────────────────────────────────────────
+  if (gamePhase === 'loading') {
+    return (
+      <div className="h-full flex items-center justify-center bg-bg-base">
+        <p className="font-ui text-text-muted text-xs tracking-widest uppercase animate-pulse">
+          Loading…
+        </p>
+      </div>
+    )
+  }
+
+  // ── Render: error ─────────────────────────────────────────────────────────
+  if (gamePhase === 'error') {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-bg-base gap-5 p-8">
+        <p className="font-ui text-red-400 text-sm text-center">
+          {errorMessage ?? 'Something went wrong.'}
+        </p>
+        <button onClick={handleRetry} className={btnClass}>
+          Try Again
+        </button>
+      </div>
+    )
+  }
+
+  // ── Render: finished ──────────────────────────────────────────────────────
+  // TODO D-18: Replace this with <FinalScoreScreen> component.
+  if (gamePhase === 'finished') {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-bg-base gap-6 p-8">
+        <p className="font-ui text-text-muted text-xs tracking-widest uppercase">
+          Game Complete
+        </p>
+        <p className="font-clue text-text-primary text-6xl font-bold">
+          {totalScore.toLocaleString()}
+        </p>
+        <p className="font-ui text-text-muted text-sm">out of 25,000 points</p>
+        <button onClick={handlePlayAgain} className={btnClass}>
+          Play Again
+        </button>
+      </div>
+    )
+  }
+
+  // ── Render: playing / submitting / result ─────────────────────────────────
+  return (
+    <div className="relative h-full flex flex-col md:flex-row overflow-hidden">
+
+      {/* Map — fills remaining space; controlled pin via guessCoords */}
+      <div className="flex-1 min-h-0">
+        <MapView
+          onPinDrop={handlePinDrop}
+          pinCoords={guessCoords}
+        />
+      </div>
+
+      {/* CluePanel column — desktop: fixed-width right column (md:w-80).
+          Mobile: CluePanel uses fixed bottom positioning internally; this
+          wrapper has no layout effect on mobile. */}
+      <div className="md:w-80 lg:w-96 md:shrink-0 md:h-full md:overflow-y-auto">
+        {currentEvent !== null && (
+          <CluePanel
+            event={currentEvent}
+            hasPin={guessCoords !== null}
+            onSubmit={handleSubmit}
+            isSubmitting={gamePhase === 'submitting'}
+          />
+        )}
+      </div>
+
+      {/* ── Round result overlay ────────────────────────────────────────────
+          Rendered on top of the map after a guess is scored.
+          TODO D-16: Replace with <ResultsOverlay> showing polyline + markers.
+      ─────────────────────────────────────────────────────────────────────── */}
+      {gamePhase === 'result' && roundResult !== null && (
+        <div className="
+          absolute inset-0 z-20
+          flex items-end md:items-center justify-center
+          bg-black/60 backdrop-blur-sm
+          p-4
+        ">
+          <div className="
+            bg-bg-panel border border-trim rounded
+            p-6 w-full max-w-sm
+            flex flex-col gap-4
+            shadow-[0_8px_40px_rgba(0,0,0,0.6)]
+          ">
+            <p className="font-ui text-text-muted text-xs tracking-widest uppercase">
+              Round {currentRound + 1} of {session.length}
+            </p>
+
+            <div className="flex flex-col gap-1">
+              <p className="font-clue text-text-primary text-4xl font-bold">
+                {roundResult.score.toLocaleString()}
+                <span className="font-ui text-text-muted text-base font-normal ml-2">pts</span>
+              </p>
+              <p className="font-ui text-text-muted text-sm">
+                {roundResult.distance} km from the true location
+              </p>
+            </div>
+
+            <hr className="border-trim-muted" />
+
+            <div className="flex items-center justify-between">
+              <p className="font-ui text-text-muted text-xs">
+                Total: {totalScore.toLocaleString()} pts
+              </p>
+              <button onClick={handleNextRound} className={btnClass}>
+                {currentRound >= session.length - 1 ? 'Final Score →' : 'Next Round →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

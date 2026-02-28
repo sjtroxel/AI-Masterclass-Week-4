@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useRef } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import { Icon, latLng, type LatLng } from 'leaflet'
+import { Icon } from 'leaflet'
 
 // ─── Leaflet default icon fix ─────────────────────────────────────────────────
 // Leaflet's Icon.Default._getIconUrl tries to resolve marker assets relative to
@@ -43,41 +43,37 @@ function PinDropHandler({ onPinDrop }: PinDropHandlerProps) {
     },
   })
 
-  // This component renders nothing; it exists solely to access the map context.
   return null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface MapViewProps {
-  /** Called with the new pin coordinates whenever the player drops or moves a pin. */
+  /**
+   * Called with the new pin coordinates whenever the player drops or moves a pin.
+   * GameBoard stores this in `guessCoords` state.
+   */
   onPinDrop: (lat: number, lng: number) => void
+  /**
+   * The current pin position, controlled by GameBoard.
+   * GameBoard clears this to `null` on round transitions — no effect or roundKey
+   * needed. Pass `null` to remove the marker.
+   */
+  pinCoords: { lat: number; lng: number } | null
 }
 
 /**
- * Full-viewport Leaflet map with single-pin drop mechanics.
+ * Controlled Leaflet map with single-pin drop mechanics.
  *
- * Layout contract (per SYSTEM_ARCHITECTURE.md):
+ * Design notes (per SYSTEM_ARCHITECTURE.md):
+ *   - Fully controlled: `pinCoords` is owned by GameBoard; MapView renders it.
+ *     Clearing the pin on round change requires only `setGuessCoords(null)` in
+ *     GameBoard — no internal effect or remount is needed.
  *   - `h-full w-full` fills whatever parent container is provided.
- *   - Parent controls the actual height (full-screen on mobile, column on md+).
- *   - `zIndex: 0` on the MapContainer ensures ResultsOverlay / FinalScoreScreen
- *     modals can stack above the map without z-index conflicts.
- *
- * Touch compatibility:
- *   - `useMapEvents` is used via the `PinDropHandler` child component.
- *   - Leaflet normalises touch taps to `click` events, so one handler covers
- *     both desktop and mobile input.
- *   - `worldCopyJump: true` keeps the view coherent when panning near the
- *     antimeridian, complementing the Haversine shortest-path calculation.
+ *   - `zIndex: 0` ensures ResultsOverlay / FinalScoreScreen modals render above.
+ *   - `worldCopyJump: true` keeps the view coherent near the antimeridian.
  */
-export function MapView({ onPinDrop }: MapViewProps) {
-  const [pin, setPin] = useState<LatLng | null>(null)
-
-  function handlePinDrop(lat: number, lng: number) {
-    setPin(latLng(lat, lng))
-    onPinDrop(lat, lng)
-  }
-
+export function MapView({ onPinDrop, pinCoords }: MapViewProps) {
   return (
     <MapContainer
       center={[20, 0]}
@@ -91,8 +87,10 @@ export function MapView({ onPinDrop }: MapViewProps) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      <PinDropHandler onPinDrop={handlePinDrop} />
-      {pin !== null && <Marker position={pin} />}
+      <PinDropHandler onPinDrop={onPinDrop} />
+      {pinCoords !== null && (
+        <Marker position={[pinCoords.lat, pinCoords.lng]} />
+      )}
     </MapContainer>
   )
 }
