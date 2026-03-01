@@ -4,6 +4,7 @@ import { MapView } from './MapView'
 import { CluePanel } from './CluePanel'
 import { ResultsOverlay } from './ResultsOverlay'
 import { FinalScoreScreen } from './FinalScoreScreen'
+import Logo from './Logo'
 
 // ─── Chronicler audit note ────────────────────────────────────────────────────
 // All coordinate privacy rules enforced here:
@@ -179,7 +180,8 @@ export function GameBoard() {
   // ── Render: loading ───────────────────────────────────────────────────────
   if (gamePhase === 'loading') {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-bg-base gap-3">
+      <div className="relative h-full flex flex-col items-center justify-center bg-bg-base gap-3">
+        <Logo className="absolute opacity-10 scale-150 animate-pulse grayscale w-64 h-64 pointer-events-none" />
         <p className="font-clue text-text-primary text-lg animate-pulse">
           The Chronicler is consulting the archives…
         </p>

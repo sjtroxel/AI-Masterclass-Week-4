@@ -1,3 +1,5 @@
+import Logo from './Logo'
+
 // ─── Chronicler audit note ────────────────────────────────────────────────────
 // This component receives only scores and distances — no coordinates, no event
 // ids. All data here is post-guess and fully safe to display. The "Round
@@ -23,7 +25,8 @@ export function FinalScoreScreen({ totalScore, roundHistory, onPlayAgain }: Fina
     // overflow-y-auto guards against very small viewports, though 5 ledger
     // rows + header fit comfortably on any modern phone screen.
     // ─────────────────────────────────────────────────────────────────────────
-    <div className="h-full flex flex-col items-center justify-center bg-bg-base p-6 overflow-y-auto">
+    <div className="relative h-full flex flex-col items-center justify-center bg-bg-base p-6 overflow-y-auto">
+      <Logo className="absolute opacity-5 w-160 h-160 pointer-events-none" />
 
       <div className="
         bg-bg-panel border border-trim rounded

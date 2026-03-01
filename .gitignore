@@ -7,6 +7,10 @@ dist/
 build/
 .cache/
 
+# Playwright output (HTML report is ~500 KB and skews GitHub language stats)
+playwright-report/
+test-results/
+
 # Environment variables (Crucial for API keys later!)
 .env
 .env.local
