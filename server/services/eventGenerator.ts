@@ -1,33 +1,36 @@
 import type { HistoricalEvent } from '@shared/types'
 import { logLLMTrace } from '../utils/logger'
+import { AnthropicProvider } from '../providers/anthropicProvider'
+import { ChroniclerEngine } from '../services/chroniclerEngine'
 
 /**
  * Generates a historical event of the requested difficulty.
  *
+ * Delegates to `ChroniclerEngine`, which runs the two-agent Generate →
+ * Validate → Adversary loop backed by Anthropic (claude-haiku-4-5-20251001).
+ * On retry exhaustion the engine falls back to a random seed event from
+ * `events.json` so this function never rejects.
+ *
  * @param difficulty - The desired difficulty tier for the generated event.
- * @returns A promise resolving to a `HistoricalEvent` matching the events.json schema.
+ * @returns A promise resolving to a verified `HistoricalEvent`.
  *
  * @remarks
- * **MVP stub** — the real Claude API call (via `@anthropic-ai/sdk`) is wired in a later phase.
- * This stub is only invoked when `events.json` has fewer than 5 entries. With the full
- * seed file in place it will never be called in normal operation.
- *
- * When the LLM call is implemented, `logLLMTrace` must be called with the full prompt
- * and raw response before returning.
+ * `dotenv` must have been loaded before this function is called — i.e.
+ * `import 'dotenv/config'` must appear at the top of `server/index.ts`
+ * before this module is imported.  The `AnthropicProvider` constructor throws
+ * immediately with a descriptive message if `ANTHROPIC_API_KEY` is absent.
  */
 export async function generateEvent(difficulty: 'easy' | 'medium' | 'hard'): Promise<HistoricalEvent> {
-  const prompt = `[STUB] Generate a ${difficulty} historical event for ChronoQuizzr.`
-  const response = '[STUB] Returning hardcoded placeholder — LLM not yet wired.'
+  const provider = new AnthropicProvider(process.env.ANTHROPIC_API_KEY ?? '')
+  const engine   = new ChroniclerEngine(provider)
 
-  logLLMTrace(prompt, response)
+  const event = await engine.generateVerifiedEvent(difficulty)
 
-  return {
-    id: `generated-${difficulty}-${Date.now()}`,
-    year: 1969,
-    locationName: 'Placeholder Location (stub)',
-    clue: 'A stub event — the EventGenerator has not yet been connected to the Claude API.',
-    hiddenCoords: { lat: 0, lng: 0 },
-    difficulty,
-    source_url: 'https://example.com',
-  }
+  // Keep the existing logLLMTrace contract — summary trace at the façade level.
+  logLLMTrace(
+    `[EVENT GENERATOR FAÇADE] generateEvent("${difficulty}")`,
+    `Returned event id="${event.id}" year=${event.year} difficulty="${event.difficulty}"`
+  )
+
+  return event
 }

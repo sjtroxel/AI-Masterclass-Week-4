@@ -30,16 +30,24 @@ client/ (The Map — React/Vite/TypeScript)
 │   └── vite-env.d.ts            # Vite client type declarations (SVG imports, etc.)
 
 server/ (The Brain — Node/Express/TypeScript)
-├── index.ts                    # Entry point: loads events, starts server
+├── index.ts                    # Entry point: merges event pool, starts server
 ├── routes/
 │   └── game.ts                 # GET /api/game/start, POST /api/game/guess
 ├── utils/
 │   ├── haversine.ts            # Pure Haversine function — standalone, tested
-│   └── scorer.ts               # Wraps haversine, applies scoring formula
+│   ├── scorer.ts               # Wraps haversine, applies scoring formula
+│   └── logger.ts               # logLLMTrace → server/logs/llm_trace.log
+├── providers/
+│   ├── geminiProvider.ts       # LLMProvider interface + FatalProviderError (shared) + GeminiProvider impl
+│   └── anthropicProvider.ts    # AnthropicProvider impl (claude-haiku-4-5-20251001) — PRIMARY
 ├── services/
-│   └── eventGenerator.ts       # LLM-backed event generator (fallback slot)
+│   ├── eventGenerator.ts       # LLM-backed event generator façade (startup fallback slot)
+│   └── chroniclerEngine.ts     # Two-agent Generate → Adversary → Rewrite loop
+├── scripts/
+│   └── generateBatch.ts        # Offline batch generator: npm run generate --prefix server
 └── data/
-    └── events.json             # Curated seed file (≥ 10 verified events)
+    ├── events.json             # Curated seed file (10 verified events, hand-reviewed)
+    └── generated_events.json   # Chronicler batch output (10 events, Haiku-generated)
 ```
 
 ---
@@ -121,23 +129,53 @@ Page load
 
 ---
 
-## EventGenerator Service
+## Event Pool & Data Sources
+
+The in-memory `eventPool` (exported from `server/routes/game.ts`) is assembled at module load from two sources:
+
+| Source | File | Contents |
+|---|---|---|
+| Seed events | `data/events.json` | 10 hand-curated, hand-reviewed events |
+| Generated events | `data/generated_events.json` | 10 Haiku-generated, adversarially verified events |
+
+The pool is merged at startup. If the combined count is still below 5 (e.g. both files are empty or missing), the `EventGenerator` fallback fires.
+
+### EventGenerator Fallback
 
 ```
 server/services/eventGenerator.ts
 ```
 
-**Purpose:** Provides a fallback event source when `events.json` has fewer than 5 entries. Keeps the API contract (`GET /api/game/start`) stable regardless of seed-data quantity.
+**Purpose:** Last-resort event source when the combined pool has fewer than 5 entries.
 
 **Interface:**
 ```typescript
-// generateEvent(difficulty: 'easy' | 'medium' | 'hard'): Promise<HistoricalEvent>
+generateEvent(difficulty: 'easy' | 'medium' | 'hard'): Promise<HistoricalEvent>
 // HistoricalEvent shape matches an events.json record exactly.
 ```
 
-**Trigger condition:** On server startup, after loading `events.json`, if `events.length < 5` the loader calls `EventGenerator` once per missing event to fill the pool to 5. The generated events are held in-memory for the session only; they are not written back to `events.json`.
+**Trigger condition:** On server startup, if `eventPool.length < 5`, the loader calls `generateEvent()` once per missing slot. Generated events are held in-memory for the session only.
 
-**MVP posture:** The service file is scaffolded and its interface is defined. The LLM call implementation (Claude API via `@anthropic-ai/sdk`) is wired in Phase 1 but only invoked if the seed file is sparse.
+**Provider:** Uses `AnthropicProvider` (claude-haiku-4-5-20251001) via the `ChroniclerEngine`.
+
+### Batch Generator (Offline Tool)
+
+```
+server/scripts/generateBatch.ts
+```
+
+**Purpose:** Offline tool to populate `data/generated_events.json` with 10 adversarially-verified events. Run manually; not invoked at server startup.
+
+**Usage:** `npm run generate --prefix server`
+
+### LLM Provider Abstraction
+
+| File | Role |
+|---|---|
+| `providers/geminiProvider.ts` | Defines `LLMProvider` interface and `FatalProviderError` (shared abstractions). Contains `GeminiProvider` impl (kept for reference). |
+| `providers/anthropicProvider.ts` | **Primary provider** — `AnthropicProvider` using claude-haiku-4-5-20251001. Throws `FatalProviderError` on 401/403/404/429/529. |
+
+See `project-specs/ADR_ANTHROPIC_PIVOT.md` for the full decision record on why Gemini was replaced.
 
 ---
 

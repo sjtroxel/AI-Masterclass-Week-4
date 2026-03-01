@@ -1,3 +1,5 @@
+import fs from 'fs'
+import path from 'path'
 import { Router, Request, Response } from 'express'
 import type { HistoricalEvent, GameEvent, Guess, GuessResult } from '@shared/types'
 import { haversine } from '../utils/haversine'
@@ -7,14 +9,34 @@ import eventsData from '../data/events.json'
 const router = Router()
 
 /**
- * In-memory event pool — loaded from events.json at module initialisation.
+ * Reads `generated_events.json` at module startup.
+ * Returns an empty array if the file is absent, empty, or malformed —
+ * so the server always starts successfully even before a batch run.
+ */
+function loadGeneratedEvents(): HistoricalEvent[] {
+  const p = path.resolve(__dirname, '../data/generated_events.json')
+  try {
+    if (!fs.existsSync(p)) return []
+    const parsed = JSON.parse(fs.readFileSync(p, 'utf-8'))
+    return Array.isArray(parsed) ? (parsed as HistoricalEvent[]) : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * In-memory event pool — merged from events.json (seed) and
+ * generated_events.json (Chronicler batch output) at module initialisation.
  * Exported so that server/index.ts can extend it via the EventGenerator
- * when the seed file has fewer than 5 entries.
+ * when the combined pool has fewer than 5 entries.
  *
  * IMPORTANT: Contains full HistoricalEvent objects including hiddenCoords.
  * These must NEVER be sent to the client directly.
  */
-export const eventPool: HistoricalEvent[] = eventsData as HistoricalEvent[]
+export const eventPool: HistoricalEvent[] = [
+  ...(eventsData as HistoricalEvent[]),
+  ...loadGeneratedEvents(),
+]
 
 /** Fisher-Yates in-place shuffle; returns a shallow copy. */
 function shuffle<T>(array: T[]): T[] {
