@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, useMapEvents } from 'react-leaflet'
+import { useRef, useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, useMapEvents, useMap } from 'react-leaflet'
 import { Icon } from 'leaflet'
 
 // ─── Leaflet default icon fix ─────────────────────────────────────────────────
@@ -17,6 +17,37 @@ Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 })
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Fires `map.fitBounds` once when the result reveal happens, zooming/panning
+ * so both the player's pin and the true location are fully visible.
+ * Mounts only when `revealCoords` becomes non-null (see MapView render logic).
+ * `maxZoom: 7` prevents over-zooming on near-perfect guesses.
+ * Extra bottom padding (120 px) accommodates the mobile bottom-sheet overlay.
+ */
+function MapFitBounds({
+  pinCoords,
+  revealCoords,
+}: {
+  pinCoords: { lat: number; lng: number }
+  revealCoords: { lat: number; lng: number }
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    map.fitBounds(
+      [
+        [pinCoords.lat, pinCoords.lng],
+        [revealCoords.lat, revealCoords.lng],
+      ],
+      { paddingTopLeft: [60, 60], paddingBottomRight: [60, 120], maxZoom: 7 }
+    )
+  }, [map, pinCoords.lat, pinCoords.lng, revealCoords.lat, revealCoords.lng])
+
+  return null
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface PinDropHandlerProps {
@@ -105,29 +136,34 @@ export function MapView({ onPinDrop, pinCoords, revealCoords = null }: MapViewPr
         <Marker position={[pinCoords.lat, pinCoords.lng]} />
       )}
 
-      {/* Post-guess reveal: dashed polyline from guess to truth */}
+      {/* Post-guess reveal: dashed amber polyline from guess to true location */}
       {revealCoords !== null && pinCoords !== null && (
         <Polyline
           positions={[
             [pinCoords.lat, pinCoords.lng],
             [revealCoords.lat, revealCoords.lng],
           ]}
-          pathOptions={{ color: '#c9993a', dashArray: '8 8', weight: 2.5 }}
+          pathOptions={{ color: '#f0b429', dashArray: '10 6', weight: 4, opacity: 1 }}
         />
       )}
 
-      {/* Post-guess reveal: CircleMarker at the true event location */}
+      {/* Post-guess reveal: bright amber CircleMarker at the true event location */}
       {revealCoords !== null && (
         <CircleMarker
           center={[revealCoords.lat, revealCoords.lng]}
-          radius={8}
+          radius={12}
           pathOptions={{
-            color: '#8b6a2e',
-            fillColor: '#c9993a',
-            fillOpacity: 0.9,
-            weight: 2,
+            color: '#ffffff',
+            fillColor: '#f0b429',
+            fillOpacity: 1,
+            weight: 3,
           }}
         />
+      )}
+
+      {/* Auto-zoom to frame both pins when result is revealed */}
+      {revealCoords !== null && pinCoords !== null && (
+        <MapFitBounds pinCoords={pinCoords} revealCoords={revealCoords} />
       )}
     </MapContainer>
   )

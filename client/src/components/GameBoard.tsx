@@ -179,9 +179,12 @@ export function GameBoard() {
   // ── Render: loading ───────────────────────────────────────────────────────
   if (gamePhase === 'loading') {
     return (
-      <div className="h-full flex items-center justify-center bg-bg-base">
-        <p className="font-ui text-text-muted text-xs tracking-widest uppercase animate-pulse">
-          Loading…
+      <div className="h-full flex flex-col items-center justify-center bg-bg-base gap-3">
+        <p className="font-clue text-text-primary text-lg animate-pulse">
+          The Chronicler is consulting the archives…
+        </p>
+        <p className="font-ui text-text-muted text-xs tracking-widest uppercase">
+          Preparing 5 historical puzzles
         </p>
       </div>
     )

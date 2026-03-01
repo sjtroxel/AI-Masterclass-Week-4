@@ -31,21 +31,29 @@ export function ResultsOverlay({
 
   return (
     // ── Cartographer ────────────────────────────────────────────────────────
-    // fixed + z-[1000]: Leaflet's highest internal layer (popups) reaches ~700.
-    // This overlay must sit above ALL Leaflet chrome on every browser/platform.
+    // No full-screen backdrop — the map must stay fully visible so the player
+    // can see the two pins and the distance line after scoring.
     //
-    // items-end   → bottom sheet on mobile  (thumb-reachable, no map conflict)
-    // md:items-center → centered modal on tablet/desktop
-    // p-4 gives safe-area breathing room on notched phones.
+    // Mobile:  fixed bottom sheet (max-h-[52vh], scrollable) — map visible above.
+    // Desktop: fixed right-side panel matching the CluePanel column width — map
+    //          fills the remaining left space with both markers in view.
+    //
+    // z-[1000] sits above all Leaflet chrome (popups ~700) on both layouts.
+    // MapView auto-zooms to fit both pins when revealCoords is set.
     // ────────────────────────────────────────────────────────────────────────
-    <div className="fixed inset-0 z-[1000] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="
+      fixed bottom-0 inset-x-0 z-1000
+      md:top-0 md:right-0 md:left-auto md:w-80 lg:w-96
+      max-h-[52vh] md:max-h-none md:h-full
+      overflow-y-auto
+      bg-bg-panel
+      border-t border-trim md:border-t-0 md:border-l
+      shadow-[0_-4px_32px_rgba(0,0,0,0.65)] md:shadow-[-4px_0_32px_rgba(0,0,0,0.5)]
+    ">
 
       <div className="
-        bg-bg-panel border border-trim rounded
-        w-full max-w-sm
         flex flex-col gap-5
         p-6
-        shadow-[0_8px_40px_rgba(0,0,0,0.7)]
       ">
 
         {/* Round indicator */}

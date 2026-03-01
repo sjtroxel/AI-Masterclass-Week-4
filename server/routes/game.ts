@@ -4,6 +4,7 @@ import { Router, Request, Response } from 'express'
 import type { HistoricalEvent, GameEvent, Guess, GuessResult } from '@shared/types'
 import { haversine } from '../utils/haversine'
 import { scorer } from '../utils/scorer'
+import { generateEvent } from '../services/eventGenerator'
 import eventsData from '../data/events.json'
 
 const router = Router()
@@ -49,23 +50,80 @@ function shuffle<T>(array: T[]): T[] {
 }
 
 /**
+ * Difficulty distribution for each game session: 1 easy, 2 medium, 2 hard.
+ * Shuffled before returning so difficulty order is unpredictable to the player.
+ */
+const DIFFICULTY_SLOTS: Array<'easy' | 'medium' | 'hard'> = [
+  'easy', 'medium', 'medium', 'hard', 'hard',
+]
+
+/**
  * GET /api/game/start
  *
- * Returns 5 randomly-selected historical events with `hiddenCoords` stripped.
- * The client receives only the `GameEvent` shape — coordinates are never exposed
- * until the player submits a guess.
+ * Generates 5 fresh historical events on-demand via the ChroniclerEngine
+ * (Generate → Adversary → Rewrite loop). All 5 are requested concurrently
+ * via Promise.all to minimise latency (~2–5 s).
+ *
+ * Generated events are pushed into `eventPool` so that POST /api/game/guess
+ * can look them up by eventId after the client submits a guess.
+ *
+ * Fallback: if the Anthropic API is unavailable (FatalProviderError, network
+ * error, missing API key), the handler falls back silently to a Fisher-Yates
+ * shuffle of the static pool so the player always receives 5 events.
+ *
+ * `hiddenCoords` is always stripped before the response — Rule 04.
  */
-router.get('/start', (_req: Request, res: Response) => {
-  if (eventPool.length === 0) {
-    res.status(500).json({ error: 'Event store is empty. Server may have failed to load data.' })
-    return
+router.get('/start', async (_req: Request, res: Response) => {
+  try {
+    // Generate 5 events concurrently — each call runs the full adversarial loop
+    const rawGenerated = await Promise.all(
+      DIFFICULTY_SLOTS.map((d) => generateEvent(d))
+    )
+
+    // Safety-net dedup: if two concurrent calls somehow produced the same event
+    // ID (astronomically unlikely), keep the first occurrence and pad from the
+    // static seed pool.
+    const seenIds = new Set<string>()
+    const deduped: HistoricalEvent[] = []
+
+    for (const event of rawGenerated) {
+      if (seenIds.has(event.id)) {
+        console.warn(`[GET /start] Duplicate event id "${event.id}" in batch — replacing with seed fallback`)
+        const replacement = (eventsData as HistoricalEvent[]).find((e) => !seenIds.has(e.id))
+        if (replacement) {
+          seenIds.add(replacement.id)
+          deduped.push(replacement)
+        }
+        // If every seed event is also a duplicate (should never happen), skip the slot
+      } else {
+        seenIds.add(event.id)
+        deduped.push(event)
+      }
+    }
+
+    // CRITICAL: push full HistoricalEvent objects (including hiddenCoords) into
+    // the in-memory pool so POST /api/game/guess can look them up by eventId.
+    eventPool.push(...deduped)
+
+    // Shuffle difficulty order before sending so players can't anticipate it
+    const gameEvents: GameEvent[] = shuffle(deduped).map(({ hiddenCoords: _, ...gameEvent }) => gameEvent)
+    res.json(gameEvents)
+
+  } catch (err) {
+    // FatalProviderError (bad API key, quota exhausted) or network failure.
+    // Fall back silently to the static pool — the player still gets a game.
+    const reason = err instanceof Error ? err.message : String(err)
+    console.warn(`[GET /start] Dynamic generation failed (${reason}); falling back to static pool`)
+
+    if (eventPool.length === 0) {
+      res.status(500).json({ error: 'Event store is empty. Server may have failed to load data.' })
+      return
+    }
+
+    const selected = shuffle(eventPool).slice(0, 5)
+    const gameEvents: GameEvent[] = selected.map(({ hiddenCoords: _, ...gameEvent }) => gameEvent)
+    res.json(gameEvents)
   }
-
-  const selected = shuffle(eventPool).slice(0, 5)
-
-  const gameEvents: GameEvent[] = selected.map(({ hiddenCoords: _, ...gameEvent }) => gameEvent)
-
-  res.json(gameEvents)
 })
 
 /**
