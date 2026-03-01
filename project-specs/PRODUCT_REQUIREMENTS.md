@@ -36,17 +36,17 @@ The following are explicitly **out of scope** for MVP:
 ## Scoring Formula
 
 ```
-score = round( 5000 × e^(−distance_km / 2000) )
+score = Math.round( 5000 × e^(−d / 2000) )
 ```
 
-| Distance  | Score     |
-|-----------|-----------|
-| 0 km      | 5,000 pts |
-| 500 km    | ~2,852 pts|
-| 1,000 km  | ~1,839 pts|
-| 2,000 km  | ~1,006 pts|
-| 5,000 km  | ~82 pts   |
-| 10,000 km | ~1 pt     |
+| Distance  | Score      |
+|-----------|------------|
+| 0 km      | 5,000 pts  |
+| 500 km    | ~3,894 pts |
+| 1,000 km  | ~3,033 pts |
+| 2,000 km  | ~1,839 pts |
+| 5,000 km  | ~410 pts   |
+| 10,000 km | ~34 pts    |
 
 Maximum score per round: **5,000 points**
 Maximum total score: **25,000 points** (5 rounds)
@@ -55,23 +55,27 @@ Maximum total score: **25,000 points** (5 rounds)
 
 ## Data Model
 
-### HistoricalEvent
+Canonical type definitions live in `shared/types.ts`. The shapes below match those types exactly.
+
+### `HistoricalEvent` (server-only — full record)
 
 ```json
 {
-  "id": "string (UUID or slug)",
-  "clue_text": "string (obfuscated — no place names)",
-  "year": "number (e.g. 1914)",
+  "id": "string (slug, e.g. 'sarajevo-1914')",
+  "clue": "string (obfuscated — no place names)",
+  "year": "number (e.g. 1914; negative = BCE)",
+  "locationName": "string (revealed post-guess)",
   "difficulty": "easy | medium | hard",
-  "coordinates": {
-    "lat": "number",
-    "lng": "number"
-  },
+  "hiddenCoords": { "lat": "number", "lng": "number" },
   "source_url": "string (Wikipedia or primary source)"
 }
 ```
 
-### GuessPayload (client → server)
+### `GameEvent` (sent to client — `hiddenCoords` stripped)
+
+`GameEvent = Omit<HistoricalEvent, 'hiddenCoords'>` — coordinates are never sent until after scoring.
+
+### `Guess` (client → server)
 
 ```json
 {
@@ -81,14 +85,13 @@ Maximum total score: **25,000 points** (5 rounds)
 }
 ```
 
-### ScoreResponse (server → client)
+### `GuessResult` (server → client)
 
 ```json
 {
   "score": "number (0–5000)",
-  "distance_km": "number",
-  "true_lat": "number",
-  "true_lng": "number"
+  "distance": "number (km)",
+  "trueCoords": { "lat": "number", "lng": "number" }
 }
 ```
 

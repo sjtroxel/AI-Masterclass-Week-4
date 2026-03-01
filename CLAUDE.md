@@ -54,12 +54,37 @@ Calls the Chronicler Engine with `AnthropicProvider` (claude-haiku-4-5-20251001)
 ### Testing
 
 ```bash
-# Run all server tests (vitest, single pass):
+# Run all server tests (vitest, single pass) — 39 tests:
 npm test --prefix server
 
-# Watch mode (re-runs on file change):
+# Run all client unit tests (vitest + jsdom) — 30 tests:
+npm test --prefix client
+
+# Watch mode for either package:
 npm run test:watch --prefix server
+npm run test:watch --prefix client
+
+# Run E2E tests (Playwright, Chromium) — 2 tests:
+# Automatically starts the dev stack if it isn't already running.
+cd client && npx playwright test
+# or: npm run test:e2e --prefix client
 ```
+
+**Test counts at a glance:**
+
+| Suite | Runner | Count | Files |
+|---|---|---|---|
+| Server unit | Vitest | 6 | `server/utils/haversine.test.ts` |
+| Server unit | Vitest | 8 | `server/utils/scorer.test.ts` |
+| Server service | Vitest | 8 | `server/services/chroniclerEngine.test.ts` |
+| Server integration | Vitest + supertest | 17 | `server/routes/game.test.ts` |
+| Client component | Vitest + jsdom | 6 | `client/src/components/MapView.test.tsx` |
+| Client component | Vitest + jsdom | 9 | `client/src/components/CluePanel.test.tsx` |
+| Client context | Vitest + jsdom | 5 | `client/src/context/ThemeContext.test.tsx` |
+| Client component | Vitest + jsdom | 5 | `client/src/components/FinalScoreScreen.test.tsx` |
+| Client component | Vitest + jsdom | 5 | `client/src/components/GameBoard.test.tsx` |
+| E2E | Playwright | 2 | `client/e2e/game-loop.spec.ts` |
+| **Total** | | **71** | |
 
 ### Individual Build Commands
 
@@ -121,7 +146,7 @@ import type { HistoricalEvent, GameEvent, Guess, GuessResult } from '@shared/typ
 |---|---|
 | `client/tsconfig.json` | Project references root |
 | `client/tsconfig.app.json` | `src/` — strict, `jsx: react-jsx`, `@shared` path |
-| `client/tsconfig.node.json` | `vite.config.ts` only |
+| `client/tsconfig.node.json` | `vite.config.ts` + `playwright.config.ts` + `e2e/**` — Node types |
 | `server/tsconfig.json` | All server `.ts` — CommonJS output to `server/dist/`, `@shared` path |
 
 ### General Rules
@@ -213,25 +238,41 @@ See `project-specs/SYSTEM_ARCHITECTURE.md` and `project-specs/API_SPEC.md`.
 ```
 shared/types.ts                             ← canonical TypeScript contracts (source of truth)
 server/utils/haversine.ts                   ← pure Haversine, Earth radius 6371 km
+server/utils/haversine.test.ts              ← 6 Vitest unit tests
 server/utils/scorer.ts                      ← Math.round(5000 * exp(-d/2000))
+server/utils/scorer.test.ts                 ← 8 Vitest unit tests
 server/utils/logger.ts                      ← logLLMTrace → server/logs/llm_trace.log
 server/data/events.json                     ← 10 curated seed events (The Chronicler owns)
 server/data/generated_events.json           ← 10 Haiku-generated events (batch output, git-ignored)
+server/app.ts                               ← Express app export (no listen) — for supertest + index.ts
 server/routes/game.ts                       ← GET /start + POST /guess; merges both event files
+server/routes/game.test.ts                  ← 17 Vitest supertest integration tests
 server/index.ts                             ← async startServer(), dotenv/config first import
 server/providers/geminiProvider.ts          ← LLMProvider interface + FatalProviderError (shared) + GeminiProvider (inactive)
 server/providers/anthropicProvider.ts       ← AnthropicProvider (PRIMARY, claude-haiku-4-5-20251001)
+server/providers/mockProvider.ts            ← LLMProvider mock (test helper — not imported by production code)
 server/services/chroniclerEngine.ts         ← two-agent Generate → Adversary → Rewrite loop
+server/services/chroniclerEngine.test.ts    ← 8 Vitest service tests (mock provider)
 server/services/eventGenerator.ts           ← thin façade; startup fallback if pool < 5
 server/scripts/generateBatch.ts             ← offline batch generator (npm run generate --prefix server)
+server/test-fixtures/                       ← JSON fixtures for chroniclerEngine tests
+server/tests/fixtures/mockEvents.json       ← 5-event fixture shared by game.test.ts + client tests
+client/playwright.config.ts                 ← Playwright config (Chromium, webServer, colorScheme:dark)
+client/e2e/game-loop.spec.ts                ← 2 Playwright E2E tests (full game journey + theme toggle)
+client/src/test-setup.ts                    ← Vitest setup (jest-dom, vitest-canvas-mock, matchMedia mock)
 client/src/index.css                        ← @theme tokens + html.theme-light overrides + Leaflet tile filters
 client/src/App.tsx                          ← ThemeProvider + ThemeToggle + GameBoard
 client/src/context/ThemeContext.tsx         ← theme state + provider + useTheme() hook
+client/src/context/ThemeContext.test.tsx    ← 5 Vitest tests (toggle, localStorage, class mutation)
 client/src/components/ThemeToggle.tsx       ← fixed top-3 left-3 z-900 HUD pill
 client/src/components/GameBoard.tsx         ← root orchestrator, all game state
+client/src/components/GameBoard.test.tsx    ← 5 Vitest tests (loading, error, round advance, long-clue regression)
 client/src/components/MapView.tsx           ← Leaflet map, pin-drop, revealCoords polyline
+client/src/components/MapView.test.tsx      ← 6 Vitest tests (pin, reveal, react-leaflet fully mocked)
 client/src/components/CluePanel.tsx         ← clue display, spinner button, inline submit error
+client/src/components/CluePanel.test.tsx    ← 9 Vitest tests (disabled state, spinner, BCE years)
 client/src/components/ResultsOverlay.tsx    ← fixed z-[1000], score card, source link reveal
 client/src/components/FinalScoreScreen.tsx  ← Round Logbook ledger table, Play Again
+client/src/components/FinalScoreScreen.test.tsx ← 5 Vitest tests (table rows, Play Again callback)
 ```
 

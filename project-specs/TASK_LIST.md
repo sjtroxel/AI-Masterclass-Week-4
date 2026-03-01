@@ -197,3 +197,68 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
 - [x] **D-31** Run `generateBatch.ts` — 10 events generated and written to `server/data/generated_events.json`
 
 - [x] **D-32** Smoke-test: `npm run dev` → `GET /api/game/start` returns 5 events from merged 20-event pool ✓
+
+---
+
+## Phase 6 — Professional Test Coverage
+
+> Strategy spec: `project-specs/TESTING_STRATEGY.md`
+> All 71 tests passing as of this phase completion.
+
+### Layer 1 — Backend Unit Tests (Pure Functions)
+
+- [x] **D-33** Extend `server/utils/haversine.test.ts` — 2 new cases added (equatorial symmetry + both-poles antipodal ≈ 20,015 km), total 6 tests passing
+
+- [x] **D-34** Create `server/utils/scorer.test.ts` — 8 pure-function tests covering all scoring benchmarks from the spec table plus a non-negative guarantee at extreme distances
+
+### Layer 2 — Service Tests (ChroniclerEngine with Mock Provider)
+
+- [x] **D-35** Create `server/providers/mockProvider.ts` — `MockProvider` implementing `LLMProvider`; rotates through pre-scripted response strings; sentinels `__FATAL__` and `__ERROR__` trigger the two error paths
+
+- [x] **D-36** Create `server/test-fixtures/` — 7 JSON fixture files (`validEvent.json`, `validAdversaryPass.json`, `validAdversaryFail.json`, `validAdversaryCoordsBad.json`, `rewrittenEvent.json`, `invalidJson.json`, `missingFields.json`) used by `chroniclerEngine.test.ts`
+
+- [x] **D-37** Create `server/services/chroniclerEngine.test.ts` — 8 service tests covering: happy path, pass-after-rewrite, topic-drift guard, coordinate hallucination guard, schema-invalid generation, total exhaustion → seed fallback, `FatalProviderError` propagation, blacklist enforcement in prompt
+
+### Layer 3 — Integration Tests (Express Routes)
+
+- [x] **D-38** Extract `server/app.ts` — Express app (with routes and middleware) exported without calling `listen`; `server/index.ts` imports and starts it; enables supertest to bind a random port in tests without conflicts
+
+- [x] **D-39** Install `supertest` + `@types/supertest` in `server/`; create `server/routes/game.test.ts` — 17 integration tests:
+  - `GET /api/game/start`: 5 events returned, `GameEvent` shape, **`hiddenCoords` absent** (coordinate privacy regression guard), unique IDs, JSON content-type
+  - `POST /api/game/guess`: valid guess → `{ distance, score, trueCoords }`, `score === 5000` on exact match, unknown eventId → 404, missing/invalid fields → 400, out-of-range lat/lng → 400
+
+- [x] **D-40** Create `server/tests/fixtures/mockEvents.json` — 5-event `HistoricalEvent[]` fixture used by both `game.test.ts` (supertest) and the client's `GameBoard.test.tsx` (fetch mock)
+
+### Layer 4 — Frontend Component Tests
+
+- [x] **D-41** Configure client test environment:
+  - Add `test` block to `client/vite.config.ts` (jsdom, globals:true, setupFiles, `exclude: ['e2e/**']`)
+  - Install `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom`, `vitest-canvas-mock`, `@vitest/coverage-v8`
+  - Create `client/src/test-setup.ts` (jest-dom import, `vitest-canvas-mock`, `matchMedia` stub)
+
+- [x] **D-42** Create `client/src/components/MapView.test.tsx` — 6 tests; `react-leaflet` and `leaflet` fully mocked via `vi.mock`; tests verify: map container renders, `Marker` appears with `pinCoords`, absent with null, `Polyline`/`CircleMarker` absent/present based on `revealCoords`, `CircleMarker` center matches coords
+
+- [x] **D-43** Create `client/src/components/CluePanel.test.tsx` — 9 tests; `ThemeProvider` wrapper required (uses `useTheme`); tests verify: clue text, year (via `getAllByText` — appears in both mobile handle and desktop section), difficulty badge, Submit disabled/enabled with `hasPin`, `onSubmit` called on click, spinner when `isSubmitting`, `submitError` inline, BCE year formatting
+
+- [x] **D-44** Create `client/src/context/ThemeContext.test.tsx` — 5 tests; verifies: default dark (no `theme-light` class), toggle adds class, second toggle removes class, `localStorage` persistence
+
+- [x] **D-45** Create `client/src/components/FinalScoreScreen.test.tsx` — 5 tests; verifies: "Round Logbook" heading, 5 `<tr>` rows in `<tbody>`, total score rendered ≥ twice (`toLocaleString()`), "Play Again" button present, click fires callback
+
+- [x] **D-46** Create `client/src/components/GameBoard.test.tsx` — 5 tests; global `fetch` stubbed with `vi.stubGlobal`; `react-leaflet` mocked with `simulatePinDrop` closure captured from `useMapEvents`; tests verify: loading state on mount, first clue after fetch, error screen on 500, round 1 → round 2 transition (pin drop + submit + Next Round), 150+ word clue renders with Submit still present (long-clue scroll regression)
+
+### Layer 5 — E2E Tests (Playwright)
+
+- [x] **D-47** Install `@playwright/test` in `client/`; run `npx playwright install chromium`
+
+- [x] **D-48** Create `client/playwright.config.ts`:
+  - Chromium-only, 1 worker (prevents race conditions on shared game state)
+  - `webServer`: `npm run dev` from repo root (`cwd: path.resolve(__dirname, '..')`), url 5173, 60 s timeout, `reuseExistingServer: !process.env.CI`
+  - `colorScheme: 'dark'` forced globally for deterministic theme assertions
+  - ESM-compatible: `__dirname` reconstructed via `fileURLToPath(import.meta.url)` (required because `client/package.json` is `"type": "module"`)
+  - Added `playwright.config.ts` and `e2e/**` to `tsconfig.node.json` include — clears IDE diagnostics
+
+- [x] **D-49** Create `client/e2e/game-loop.spec.ts` — 2 E2E specs:
+  - **Full Game Journey**: navigates to `/`, asserts loading text, plays all 5 rounds (drop pin via `.leaflet-container` click, Submit Guess, assert ResultsOverlay with `Round N of 5`, click Next Round / Final Score), asserts FinalScoreScreen + "Play Again", clicks Play Again and asserts loading text reappears
+  - **Theme Integration**: asserts no `theme-light` on `html`, clicks ThemeToggle (aria-label "Switch to Aged Map"), asserts `theme-light` added, toggles back
+
+- [x] **D-50** Add `"test:e2e": "playwright test"` script to `client/package.json`; add `exclude: ['e2e/**']` to Vitest config so `npm test --prefix client` no longer picks up Playwright specs
