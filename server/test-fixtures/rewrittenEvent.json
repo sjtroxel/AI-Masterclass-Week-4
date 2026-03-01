@@ -1,0 +1,9 @@
+{
+  "id": "test-event-1000",
+  "year": 1000,
+  "locationName": "Test Ancient Citadel, Test Region, Test Empire",
+  "clue": "In the heartland of a powerful continental empire, an elevated settlement commanded vital overland routes between rival civilisations for several centuries.",
+  "hiddenCoords": { "lat": 39.9334, "lng": 32.8597 },
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Test_event"
+}

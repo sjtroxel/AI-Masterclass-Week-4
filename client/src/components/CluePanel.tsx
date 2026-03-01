@@ -169,10 +169,16 @@ export function CluePanel({
             {/* Decorative rule — desktop only */}
             <hr className="hidden md:block border-trim-muted" />
 
-            {/* Clue text — the heart of the panel */}
-            <p className="font-clue text-text-primary text-base leading-relaxed md:text-lg md:leading-loose">
-              {event.clue}
-            </p>
+            {/* Clue text — the heart of the panel.
+                Scrollable on mobile so that 100+ word clues never push the
+                Submit button off-screen. max-h-32 caps the viewport height used
+                by the clue on small phones; md:max-h-none removes the cap on
+                larger screens where the layout has room. */}
+            <div className="overflow-y-auto max-h-32 md:max-h-none">
+              <p className="font-clue text-text-primary text-base leading-relaxed md:text-lg md:leading-loose">
+                {event.clue}
+              </p>
+            </div>
 
             {/* Submit button
                 Two distinct disabled states:

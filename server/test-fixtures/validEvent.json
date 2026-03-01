@@ -1,0 +1,9 @@
+{
+  "id": "test-event-1000",
+  "year": 1000,
+  "locationName": "Test Ancient Citadel, Test Region, Test Empire",
+  "clue": "At the edge of a highland plateau, a fortified trading hub controlled the mountain passes linking two great river valleys during a period of imperial consolidation.",
+  "hiddenCoords": { "lat": 39.9334, "lng": 32.8597 },
+  "difficulty": "medium",
+  "source_url": "https://en.wikipedia.org/wiki/Test_event"
+}

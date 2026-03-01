@@ -38,4 +38,22 @@ describe('haversine', () => {
     expect(isNaN(dist)).toBe(false)
     expect(dist).toBeGreaterThanOrEqual(0)
   })
+
+  it('equatorial crossing is symmetric: haversine(A,B) === haversine(B,A)', () => {
+    // Two equatorial points on opposite sides of the prime meridian.
+    // Symmetry is a mathematical requirement of the Haversine formula.
+    const lat1 = 0
+    const lng1 = -60 // 60° W
+    const lat2 = 0
+    const lng2 = 60  // 60° E
+    expect(haversine(lat1, lng1, lat2, lng2)).toBe(haversine(lat2, lng2, lat1, lng1))
+  })
+
+  it('both poles: haversine(90,0,-90,0) ≈ 20,015 km (half circumference)', () => {
+    // North pole to south pole through the prime meridian should equal exactly
+    // half the Earth's great-circle circumference: π × R ≈ 20,015 km.
+    const dist = haversine(90, 0, -90, 0)
+    expect(dist).toBeGreaterThan(20_000)
+    expect(dist).toBeLessThan(20_030)
+  })
 })
