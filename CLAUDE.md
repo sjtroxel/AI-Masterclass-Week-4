@@ -43,6 +43,14 @@ npm run dev
 - `npm run dev --prefix client` → Vite HMR at http://localhost:5173
 - `npm run dev --prefix server` → `ts-node-dev --respawn --transpile-only index.ts` at http://localhost:3001
 
+### Offline Event Batch Generator
+
+```bash
+npm run generate --prefix server   # writes server/data/generated_events.json (10 events)
+```
+
+Calls the Chronicler Engine with `AnthropicProvider` (claude-haiku-4-5-20251001). Requires `ANTHROPIC_API_KEY` in `server/.env`.
+
 ### Testing
 
 ```bash
@@ -158,9 +166,10 @@ score = Math.round( 5000 × e^(−distance / 2000) )
 | Distance  | Score       |
 |-----------|-------------|
 | 0 km      | 5,000 (max) |
-| 500 km    | ~2,852      |
-| 1,000 km  | ~1,839      |
-| 10,000 km | ~1          |
+| 500 km    | ~3,894      |
+| 1,000 km  | ~3,033      |
+| 2,000 km  | ~1,839      |
+| 10,000 km | ~34         |
 
 Max per game: **25,000** (5 rounds).
 
@@ -182,9 +191,15 @@ Invoke with: *"Chronicler, craft a clue for..."*
 
 See `project-specs/AGENTS.md` for full detail.
 
-### The EventGenerator Service
+### The Chronicler Engine & Event Pool
 
-`server/services/eventGenerator.ts` — fallback event source when `events.json` has < 5 entries. Returns `HistoricalEvent` shape. MVP ships as a stub; real Claude API call wired in Phase 1. Uses `logLLMTrace` for observability.
+**Event pool** (assembled at server startup): `events.json` (10 seed) + `generated_events.json` (10 Haiku-generated) = 20 total. Merged in `server/routes/game.ts`.
+
+**`server/services/chroniclerEngine.ts`** — two-agent Generate → Adversary → Rewrite loop. Takes a `difficulty` tier, runs up to 3 retries. Both agents use `AnthropicProvider` (`claude-haiku-4-5-20251001`). Logs every call via `logLLMTrace`.
+
+**`server/services/eventGenerator.ts`** — thin façade over `ChroniclerEngine`. Called by `server/index.ts` at startup if combined pool < 5 entries.
+
+**LLM provider:** `AnthropicProvider` in `server/providers/anthropicProvider.ts`. Model: **`claude-haiku-4-5-20251001`** (never use `*-latest` — aliases expire silently). Throws `FatalProviderError` on 401/403/404/429/529. `LLMProvider` interface and `FatalProviderError` live in `server/providers/geminiProvider.ts` (legacy location). Requires `ANTHROPIC_API_KEY` in `server/.env`.
 
 ---
 
@@ -196,30 +211,27 @@ See `project-specs/SYSTEM_ARCHITECTURE.md` and `project-specs/API_SPEC.md`.
 
 **Key files:**
 ```
-shared/types.ts                    ← canonical TypeScript contracts (source of truth)
-server/utils/haversine.ts          ← pure Haversine, unit tested
-server/utils/scorer.ts             ← scoring formula
-server/utils/logger.ts             ← LLM trace logger → server/logs/llm_trace.log
-server/data/events.json            ← curated seed events (The Chronicler owns this)
-server/services/eventGenerator.ts  ← LLM fallback (Claude API)
-server/routes/game.ts              ← GET /api/game/start, POST /api/game/guess
-client/src/components/GameBoard.tsx    ← root orchestrator
-client/src/components/MapView.tsx      ← Leaflet map, pin-drop
-client/src/components/CluePanel.tsx    ← clue + submit
-client/src/components/ResultsOverlay.tsx   ← post-guess results
-client/src/components/FinalScoreScreen.tsx ← end-of-game summary
+shared/types.ts                             ← canonical TypeScript contracts (source of truth)
+server/utils/haversine.ts                   ← pure Haversine, Earth radius 6371 km
+server/utils/scorer.ts                      ← Math.round(5000 * exp(-d/2000))
+server/utils/logger.ts                      ← logLLMTrace → server/logs/llm_trace.log
+server/data/events.json                     ← 10 curated seed events (The Chronicler owns)
+server/data/generated_events.json           ← 10 Haiku-generated events (batch output, git-ignored)
+server/routes/game.ts                       ← GET /start + POST /guess; merges both event files
+server/index.ts                             ← async startServer(), dotenv/config first import
+server/providers/geminiProvider.ts          ← LLMProvider interface + FatalProviderError (shared) + GeminiProvider (inactive)
+server/providers/anthropicProvider.ts       ← AnthropicProvider (PRIMARY, claude-haiku-4-5-20251001)
+server/services/chroniclerEngine.ts         ← two-agent Generate → Adversary → Rewrite loop
+server/services/eventGenerator.ts           ← thin façade; startup fallback if pool < 5
+server/scripts/generateBatch.ts             ← offline batch generator (npm run generate --prefix server)
+client/src/index.css                        ← @theme tokens + html.theme-light overrides + Leaflet tile filters
+client/src/App.tsx                          ← ThemeProvider + ThemeToggle + GameBoard
+client/src/context/ThemeContext.tsx         ← theme state + provider + useTheme() hook
+client/src/components/ThemeToggle.tsx       ← fixed top-3 left-3 z-900 HUD pill
+client/src/components/GameBoard.tsx         ← root orchestrator, all game state
+client/src/components/MapView.tsx           ← Leaflet map, pin-drop, revealCoords polyline
+client/src/components/CluePanel.tsx         ← clue display, spinner button, inline submit error
+client/src/components/ResultsOverlay.tsx    ← fixed z-[1000], score card, source link reveal
+client/src/components/FinalScoreScreen.tsx  ← Round Logbook ledger table, Play Again
 ```
 
----
-
-## Phase Status
-
-| Phase | Status |
-|-------|--------|
-| Phase 0 — Project Scaffold | Complete |
-| Phase 1 — Backend Core | Complete |
-| Phase 2 — Frontend Core | Complete |
-| Phase 3 — Results & Scoring | Complete |
-| Phase 4 — Polish | Complete |
-
-See `project-specs/TASK_LIST.md` for the D-## checklist.

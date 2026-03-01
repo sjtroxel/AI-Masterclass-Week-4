@@ -1,9 +1,15 @@
 # Chronicler Engine — Phase 5 Specification
 
+> **Implementation note:** This spec was originally designed around the Google Gemini API.
+> During Phase 5, the provider was switched to **Anthropic** (`@anthropic-ai/sdk`,
+> model `claude-haiku-4-5-20251001`). All architecture, agent prompts, and retry logic
+> are implemented as specified here. Only the provider layer differs — see
+> `project-specs/ADR_ANTHROPIC_PIVOT.md` for the full decision record.
+
 ## Overview
 
 Phase 5 replaces the MVP stub in `server/services/eventGenerator.ts` with a live, multi-agent
-pipeline backed by the Google Gemini API (`@google/generative-ai` SDK). The engine generates
+pipeline backed by the Anthropic API (`@anthropic-ai/sdk`, `claude-haiku-4-5-20251001`). The engine generates
 `HistoricalEvent` records that conform to the obfuscation standard in Rule 06 and the
 `HistoricalEvent` schema in `shared/types.ts`.
 

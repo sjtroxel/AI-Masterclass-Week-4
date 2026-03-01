@@ -157,3 +157,43 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
   - Antipodal guess (0,0) → (0,180): distance = 20,015 km, score = **0** ✓
   - Antimeridian polyline: `worldCopyJump: true` on MapContainer; Haversine formula handles antimeridian natively
   - **Docstring correction:** `scorer.ts` table was wrong (matched k≈1000, not k=2000). Corrected to actual values: 500 km→3,894 · 1,000 km→3,033 · 10,000 km→34 · score hits 1 at ~16,300 km
+
+---
+
+## Phase 5 — Chronicler Engine
+
+> **Note:** Spec was originally written for Gemini. Mid-phase, pivoted to Anthropic SDK. See `project-specs/ADR_ANTHROPIC_PIVOT.md` for decision record. All tasks completed with `AnthropicProvider` (`claude-haiku-4-5-20251001`).
+
+- [x] **D-23** Install `@anthropic-ai/sdk` + `dotenv` in `server/`
+  - Replaced `@google/generative-ai` (Gemini pivot per ADR)
+  - `dotenv` loaded via `import 'dotenv/config'` as first line of `server/index.ts`
+
+- [x] **D-24** Create `server/providers/geminiProvider.ts` — `LLMProvider` interface + `FatalProviderError` (shared abstractions) + `GeminiProvider` impl (retained for reference, not wired)
+
+- [x] **D-25** Create `server/providers/anthropicProvider.ts` — `AnthropicProvider` implementing `LLMProvider`
+  - Model: `claude-haiku-4-5-20251001` (hard-coded; never use `*-latest`)
+  - Throws `FatalProviderError` on 401/403/404/429/529 — stops batch immediately
+
+- [x] **D-26** Create `server/services/chroniclerEngine.ts` — two-agent Generate → Adversary → Rewrite loop
+  - Generator prompt: Chronicler persona + obfuscation rules + difficulty guidance
+  - Adversary prompt: blind check on clue text + coordinate plausibility
+  - `MAX_RETRIES = 3`; throws `ChroniclerError` on exhaustion
+  - Both agents call `logLLMTrace` per invocation
+
+- [x] **D-27** Update `server/services/eventGenerator.ts` — replace stub; thin façade over `ChroniclerEngine`
+
+- [x] **D-28** Create `server/scripts/generateBatch.ts` — CLI batch generator
+  - Composition: 3 easy / 5 medium / 2 hard = 10 events
+  - 1,000 ms delay between calls; skips failed slots (logs error, continues)
+  - Writes to `server/data/generated_events.json`; `npm run generate --prefix server`
+
+- [x] **D-29** Update `server/routes/game.ts` — merge `generated_events.json` into `eventPool` at load time
+  - Deduplicates by `id`; curated events win on collision
+
+- [x] **D-30** Update `.gitignore` + `project-specs/SYSTEM_ARCHITECTURE.md`
+  - `server/data/generated_events.json` added to `.gitignore`
+  - `SYSTEM_ARCHITECTURE.md` updated with `providers/`, `scripts/`, and event pool section
+
+- [x] **D-31** Run `generateBatch.ts` — 10 events generated and written to `server/data/generated_events.json`
+
+- [x] **D-32** Smoke-test: `npm run dev` → `GET /api/game/start` returns 5 events from merged 20-event pool ✓
