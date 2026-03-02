@@ -9,8 +9,13 @@ import gameRouter from './routes/game'
  * can import `app` and issue supertest requests without calling `app.listen()`.
  * The actual `listen()` call lives exclusively in `server/index.ts`.
  */
+const allowedOrigins = [
+  'http://localhost:5173',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+]
+
 export const app = express()
 
-app.use(cors({ origin: 'http://localhost:5173' }))
+app.use(cors({ origin: allowedOrigins }))
 app.use(express.json())
 app.use('/api/game', gameRouter)

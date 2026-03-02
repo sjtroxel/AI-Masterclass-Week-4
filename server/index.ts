@@ -3,7 +3,7 @@ import { app } from './app'
 import { eventPool } from './routes/game'
 import { generateEvent } from './services/eventGenerator'
 
-const PORT = 3001
+const PORT = parseInt(process.env.PORT ?? '3001', 10)
 
 /**
  * Async server entry point.

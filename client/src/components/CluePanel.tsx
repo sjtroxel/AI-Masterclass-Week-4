@@ -144,11 +144,11 @@ export function CluePanel({
         className={`
           grid transition-[grid-template-rows] duration-300 ease-in-out
           ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}
-          md:grid-rows-[1fr]
+          md:grid-rows-[1fr] md:flex-1
         `}
       >
-        <div className="min-h-0 overflow-hidden">
-          <div className="px-5 pb-6 pt-3 md:pt-6 flex flex-col gap-5">
+        <div className="min-h-0 overflow-hidden md:flex md:flex-col">
+          <div className="px-5 pb-6 pt-3 md:pt-6 flex flex-col gap-5 md:flex-1">
 
             {/* Year + difficulty — desktop only (mobile shows these in the handle) */}
             <div className="hidden md:flex items-center justify-between">
@@ -174,7 +174,7 @@ export function CluePanel({
                 Submit button off-screen. max-h-32 caps the viewport height used
                 by the clue on small phones; md:max-h-none removes the cap on
                 larger screens where the layout has room. */}
-            <div className="overflow-y-auto max-h-32 md:max-h-none">
+            <div className="overflow-y-auto max-h-32 md:max-h-none md:flex-1 md:min-h-0">
               <p className="font-clue text-text-primary text-base leading-relaxed md:text-lg md:leading-loose">
                 {event.clue}
               </p>
