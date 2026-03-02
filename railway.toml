@@ -6,8 +6,12 @@
 # Running from the repo root gives the full file tree to the build.
 
 [build]
-# Install server deps then compile TypeScript + copy data files into dist/.
-buildCommand = "npm ci --prefix server && npm run build --prefix server"
+# cd into server/ so tsc resolves tsconfig correctly.
+# --include=dev forces devDependencies (TypeScript) to install even when
+# Railway sets NODE_ENV=production — without this, tsc is missing and the
+# compile step silently fails, leaving dist/ empty.
+buildCommand = "cd server && npm ci --include=dev && npm run build"
 
 [deploy]
+# Run from repo root (/app); server/dist/index.js resolves to /app/server/dist/index.js.
 startCommand = "node server/dist/index.js"
