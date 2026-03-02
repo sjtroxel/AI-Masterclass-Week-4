@@ -14,7 +14,7 @@ Enforced rules live in `.claude/rules/` — one file per rule. Claude loads thes
 
 ```
 chrono-quizzr/          ← root: concurrently only
-├── shared/             ← TypeScript contracts (types.ts) — no npm package, no node_modules
+├── shared/             ← TypeScript contracts (types.d.ts) — no npm package, no node_modules
 ├── client/             ← Vite + React frontend ("The Map"), port 5173
 └── server/             ← Node/Express backend ("The Brain"), port 3001
 ```
@@ -105,7 +105,7 @@ cd server && npx tsc --noEmit      # checks all server .ts files
 
 ## Shared Types & the `@shared` Alias
 
-All core interfaces live in `shared/types.ts`. Both packages reference them via the `@shared` alias:
+All core interfaces live in `shared/types.d.ts`. Both packages reference them via the `@shared` alias:
 
 ```typescript
 import type { HistoricalEvent, GameEvent, Guess, GuessResult } from '@shared/types';
@@ -119,7 +119,7 @@ import type { HistoricalEvent, GameEvent, Guess, GuessResult } from '@shared/typ
 | `client` | `vite.config.ts` → `resolve.alias` + `tsconfig.app.json` → `paths` |
 | `server` | `server/tsconfig.json` → `paths` |
 
-**Core types** (`shared/types.ts`):
+**Core types** (`shared/types.d.ts`):
 
 | Type | Description |
 |---|---|
@@ -151,7 +151,7 @@ import type { HistoricalEvent, GameEvent, Guess, GuessResult } from '@shared/typ
 
 ### General Rules
 - Do not use `any` — use `unknown` and narrow, or define a proper interface.
-- All API shapes must use types from `shared/types.ts` — no ad-hoc inline types for request/response bodies.
+- All API shapes must use types from `shared/types.d.ts` — no ad-hoc inline types for request/response bodies.
 - No semicolons in client component files (ESLint default).
 - Prefer named exports over default exports in utility files.
 
@@ -234,9 +234,16 @@ See `project-specs/SYSTEM_ARCHITECTURE.md` and `project-specs/API_SPEC.md`.
 
 **API ports:** Vite `5173` → Express `3001` (CORS configured for dev).
 
+**Production:**
+- Frontend: `https://chrono-quizzr.vercel.app` (Vercel, Root Directory = `client`)
+- Backend: `https://chrono-quizzr.up.railway.app` (Railway, Root Directory = blank in UI)
+- Railway env vars required: `ANTHROPIC_API_KEY`, `FRONTEND_URL` (do NOT set `PORT`)
+- Vercel env var required: `VITE_API_URL=https://chrono-quizzr.up.railway.app`
+- `railway.toml` at repo root — buildCommand uses `--include=dev` to force devDep install despite `NODE_ENV=production`
+
 **Key files:**
 ```
-shared/types.ts                             ← canonical TypeScript contracts (source of truth)
+shared/types.d.ts                           ← canonical TypeScript contracts — declaration file (MUST stay .d.ts, not .ts)
 server/utils/haversine.ts                   ← pure Haversine, Earth radius 6371 km
 server/utils/haversine.test.ts              ← 6 Vitest unit tests
 server/utils/scorer.ts                      ← Math.round(5000 * exp(-d/2000))

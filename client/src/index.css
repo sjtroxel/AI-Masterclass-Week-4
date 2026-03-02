@@ -102,3 +102,14 @@ html.theme-light {
 html.theme-light .leaflet-tile-pane {
   filter: sepia(0.3) brightness(0.96) saturate(0.8);
 }
+
+/* Container background — visible while tiles load or if the map edge is
+   exposed. Approximates the filtered ocean colour in each theme so any
+   brief gap blends rather than jarring white/gray. */
+.leaflet-container {
+  background: #16262f;
+}
+
+html.theme-light .leaflet-container {
+  background: #c5d0d8;
+}

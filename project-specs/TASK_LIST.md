@@ -262,3 +262,45 @@ Legend: `[ ]` = pending · `[x]` = complete · `[~]` = in progress
   - **Theme Integration**: asserts no `theme-light` on `html`, clicks ThemeToggle (aria-label "Switch to Aged Map"), asserts `theme-light` added, toggles back
 
 - [x] **D-50** Add `"test:e2e": "playwright test"` script to `client/package.json`; add `exclude: ['e2e/**']` to Vitest config so `npm test --prefix client` no longer picks up Playwright specs
+
+---
+
+## Phase 7 — Logo, Deployment & Production Hardening
+
+### Logo Integration
+
+- [x] **D-51** Create `client/public/favicon.svg` — same SVG geometry as `Logo.tsx` with hardcoded gold stroke (`#c9993a`); update `client/index.html` title to "ChronoQuizzr" and `href` to `/favicon.svg`
+
+- [x] **D-52** Integrate `Logo.tsx` into loading and end screens
+  - `GameBoard.tsx` loading state: Logo rendered as a large, pulsing, greyscale watermark (`opacity-10 scale-150 animate-pulse grayscale`) behind the "consulting the archives…" text
+  - `FinalScoreScreen.tsx`: Logo rendered as a faint background watermark (`opacity-5 w-160 h-160`) — `pointer-events-none` on all Logo instances to prevent click interception
+
+### Deployment Prep (Server)
+
+- [x] **D-53** Harden `server/index.ts` for Railway — `PORT` read from `process.env.PORT` (Railway injects this; hardcoding causes health-check failure)
+
+- [x] **D-54** Harden `server/app.ts` CORS for production — `allowedOrigins` array includes `localhost:5173` plus `process.env.FRONTEND_URL` when set; dynamic origin function rejects unlisted origins
+
+- [x] **D-55** Update `server/package.json` build script — `"tsc && cp -r data dist/"` copies `server/data/` into `server/dist/data/` so compiled routes can resolve `events.json` at runtime via `require('../data/events.json')`
+
+- [x] **D-56** Create `client/vercel.json` — SPA rewrite rule (`"source": "/(.*)"` → `"destination": "/index.html"`) so direct URL hits and browser refreshes are handled by React Router
+
+- [x] **D-57** Update `server/.env.example` — add `FRONTEND_URL` variable with explanation; note that `PORT` must NOT be set manually in Railway
+
+### Railway Deployment (3 failed deploys → 1 success)
+
+- [x] **D-58** Fix Deploy #1 (TS2307 `@shared/types` not found) — created `railway.toml` at repo root with blank Root Directory; Railpack no longer isolates `server/` and `../shared/` is reachable in the build container
+
+- [x] **D-59** Fix Deploy #2 (empty `dist/`) — added `--include=dev` to `npm ci` in `railway.toml` buildCommand; Railway's global `NODE_ENV=production` was causing `npm ci` to skip devDependencies (including TypeScript), leaving `dist/` empty
+
+- [x] **D-60** Fix Deploy #3 (still empty `dist/`) — root cause: `shared/types.ts` as a `.ts` source file was pulled into the server's tsc compilation unit (even via `import type`), shifting tsc's implicit `rootDir` to the repo root and nesting all output under `dist/server/` instead of `dist/`. Fix: renamed `shared/types.ts` → `shared/types.d.ts` (declaration files are never emitted and do not affect rootDir) and added `"rootDir": "."` to `server/tsconfig.json`. All 39 server tests pass; `dist/index.js` now lands at the correct flat path.
+
+### Vercel Deployment
+
+- [x] **D-61** Deploy frontend to Vercel — Root Directory: `client`; env var `VITE_API_URL` = Railway backend URL; `vercel.json` SPA rewrite applied automatically
+
+- [x] **D-62** Wire CORS — added `FRONTEND_URL=https://chrono-quizzr.vercel.app` to Railway environment variables; Railway redeployed automatically; full client↔server loop verified in production
+
+### Map Bounds Fix
+
+- [x] **D-63** Fix map drag-past-poles bug (desktop + iPad) — added `maxBounds={[[-85.051129, -180000], [85.051129, 180000]]}` and `maxBoundsViscosity={1.0}` to `<MapContainer>`; longitude uses a large finite number (not `Infinity`) because passing `Infinity` to Leaflet's Mercator pixel projection silently breaks the bounds arithmetic and disables the latitude constraint entirely; added `.leaflet-container` background colours in `index.css` for both themes as a safety net

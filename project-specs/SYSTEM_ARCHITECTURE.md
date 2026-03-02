@@ -15,17 +15,21 @@ Communication is via JSON REST API over HTTP. The frontend never receives event 
 
 ```
 client/ (The Map — React/Vite/TypeScript)
+├── vercel.json                 # SPA rewrite rule: all routes → index.html (Vercel deployment)
 ├── playwright.config.ts        # Playwright E2E config (Chromium, webServer, colorScheme:dark)
 ├── e2e/
 │   └── game-loop.spec.ts       # 2 E2E tests: full game journey + theme toggle
+├── public/
+│   └── favicon.svg             # SVG favicon: map-pin with clock face, gold stroke (#c9993a)
 ├── src/
 │   ├── test-setup.ts           # Vitest global setup (jest-dom, vitest-canvas-mock, matchMedia)
 │   ├── components/
+│   │   ├── Logo.tsx             # Reusable SVG logo component (map-pin + clock); accepts className
 │   │   ├── GameBoard.tsx        # Root orchestrator: manages round index & game state
 │   │   ├── GameBoard.test.tsx   # 5 Vitest tests (loading, error, round advance, long-clue regression)
 │   │   ├── CluePanel.tsx        # Displays clue, year; contains Submit button + spinner
 │   │   ├── CluePanel.test.tsx   # 9 Vitest tests (disabled state, spinner, BCE years)
-│   │   ├── MapView.tsx          # Leaflet map, pin-drop, post-guess polyline/marker
+│   │   ├── MapView.tsx          # Leaflet map, pin-drop, post-guess polyline/marker; maxBounds enforced
 │   │   ├── MapView.test.tsx     # 6 Vitest tests (pin, reveal; react-leaflet fully mocked)
 │   │   ├── ResultsOverlay.tsx   # Polyline, distance, round score, source reveal post-guess
 │   │   ├── FinalScoreScreen.tsx # Total score, Round Logbook table, Play Again
@@ -74,7 +78,13 @@ server/ (The Brain — Node/Express/TypeScript)
 └── data/
     ├── events.json             # Curated seed file (10 verified events, hand-reviewed)
     └── generated_events.json   # Chronicler batch output (10 events, Haiku-generated)
+
+railway.toml                    # Railway deployment config (repo root — Root Directory must be BLANK in UI)
+shared/
+└── types.d.ts                  # Canonical TypeScript contracts — declaration file (not .ts; see note below)
 ```
+
+> **`shared/types.d.ts` note:** The shared types file is a `.d.ts` declaration file, not a `.ts` source file. This is intentional. When `shared/types.ts` was a regular `.ts` file, the TypeScript compiler included it in the server's compilation unit (even via `import type`), which shifted tsc's implicit `rootDir` to the repo root and caused all compiled output to nest under `dist/server/` instead of `dist/`. Converting to `.d.ts` marks it as a declaration-only file: TypeScript reads it for type information but does not emit it and does not count it toward `rootDir` calculation. Combined with `"rootDir": "."` in `server/tsconfig.json`, this ensures compiled server output lands flat in `server/dist/` as intended.
 
 ---
 
@@ -228,6 +238,8 @@ All client components use **Tailwind v4 mobile-first breakpoints**. The default 
 - Must use Leaflet's built-in touch event handling — no mouse-only listeners.
 - The Leaflet container must fill its parent via `h-full w-full`; the parent controls the height.
 - Pin-drop must respond equally to `click` and `touchend` events. Use the react-leaflet `<MapContainer>` `useMapEvents` hook (via a child component) to intercept both.
+- `maxBounds={[[-85.051129, -180000], [85.051129, 180000]]}` + `maxBoundsViscosity={1.0}` enforce a hard stop at the Web Mercator tile boundary (±85.051°). Longitude uses a large finite number rather than `Infinity` — passing `Infinity` to Leaflet's pixel projection math silently breaks the latitude constraint.
+- `.leaflet-container` background is set in CSS for both themes to approximate the filtered ocean colour, preventing a grey flash if the container edge is ever briefly exposed.
 
 **`CluePanel`** (mobile drawer behaviour)
 - On mobile, renders at the bottom of the viewport, initially showing only the event year and a chevron toggle.
@@ -283,9 +295,11 @@ cd client && npx playwright test  # 2 Playwright E2E tests
 |---|---|
 | Coordinates never sent to client until after guess | Prevents cheating via DevTools network inspection |
 | Haversine in a standalone utility with unit tests | Correctness is critical for scoring fairness; no external geo libs |
-| CORS enabled for `localhost:5173` in dev | Vite dev server and Express run on different ports |
+| CORS allows `localhost:5173` (dev) + `FRONTEND_URL` env var (prod) | Vite and Express run on different ports; production Vercel origin whitelisted via env var |
 | Events loaded at startup, not per-request | Keeps request latency low; avoids repeated file I/O |
 | EventGenerator produces same schema as events.json | Consumers are decoupled from data source |
+| `shared/types.d.ts` must remain a declaration file, not `.ts` | A `.ts` file shifts tsc's implicit rootDir to the repo root, nesting compiled output one level too deep |
+| `railway.toml` Root Directory must be BLANK in Railway UI | Railpack isolates the Root Directory into the build container; setting it to `server/` makes `../shared/` unreachable |
 
 ---
 
@@ -295,3 +309,51 @@ cd client && npx playwright test  # 2 Playwright E2E tests
 |---|---|
 | React (Vite) | 5173 |
 | Express | 3001 |
+
+---
+
+## Production Deployment
+
+### Infrastructure
+
+| Layer | Platform | URL |
+|---|---|---|
+| Frontend | Vercel | `https://chrono-quizzr.vercel.app` |
+| Backend | Railway (Railpack) | `https://chrono-quizzr.up.railway.app` |
+
+### Railway (Backend)
+
+- **Root Directory in Railway UI:** must be **blank** (repo root). Setting it to `server/` isolates only `server/` in the build container, making `../shared/` unreachable.
+- **`railway.toml`** lives at the repo root and controls build + start:
+  ```toml
+  [build]
+  buildCommand = "cd server && npm ci --include=dev && npm run build"
+
+  [deploy]
+  startCommand = "node server/dist/index.js"
+  ```
+- `--include=dev` is required because Railway sets `NODE_ENV=production`, which causes `npm ci` to skip devDependencies (including TypeScript). Without this flag, `tsc` is not installed and `dist/` is never produced.
+- The build script (`tsc && cp -r data dist/`) copies `server/data/` into `dist/data/` so the compiled routes can resolve `events.json` at runtime.
+
+**Required Railway environment variables:**
+
+| Variable | Value |
+|---|---|
+| `ANTHROPIC_API_KEY` | Your Anthropic key (LLM event generation; falls back to static pool if absent) |
+| `FRONTEND_URL` | `https://chrono-quizzr.vercel.app` (whitelisted in CORS) |
+| `PORT` | **Do not set** — Railway injects this automatically |
+
+### Vercel (Frontend)
+
+- **Root Directory:** `client`
+- **Framework:** Vite (auto-detected)
+- **Build Command / Output Directory:** auto-detected (`npm run build` / `dist`)
+- **`client/vercel.json`** provides the SPA rewrite rule so direct URL hits return `index.html`
+
+**Required Vercel environment variable:**
+
+| Variable | Value |
+|---|---|
+| `VITE_API_URL` | `https://chrono-quizzr.up.railway.app` |
+
+`GameBoard.tsx` reads `import.meta.env.VITE_API_URL` and falls back to `http://localhost:3001` for local dev.

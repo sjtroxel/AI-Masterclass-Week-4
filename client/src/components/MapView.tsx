@@ -120,6 +120,8 @@ export function MapView({ onPinDrop, pinCoords, revealCoords = null }: MapViewPr
       zoom={2}
       minZoom={2}
       worldCopyJump={true}
+      maxBounds={[[-85.051129, -180000], [85.051129, 180000]]}
+      maxBoundsViscosity={1.0}
       className="h-full w-full"
       style={{ zIndex: 0 }}
     >
