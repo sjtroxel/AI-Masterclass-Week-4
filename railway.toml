@@ -1,0 +1,13 @@
+# Railway deployment configuration for ChronoQuizzr backend.
+#
+# Root Directory must be LEFT BLANK in the Railway UI (= repo root).
+# Railpack isolates the Root Directory into the build container, so setting
+# it to "server" makes ../shared/ inaccessible and tsc fails with TS2307.
+# Running from the repo root gives the full file tree to the build.
+
+[build]
+# Install server deps then compile TypeScript + copy data files into dist/.
+buildCommand = "npm ci --prefix server && npm run build --prefix server"
+
+[deploy]
+startCommand = "node server/dist/index.js"
