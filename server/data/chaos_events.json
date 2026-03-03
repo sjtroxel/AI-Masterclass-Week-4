@@ -1,0 +1,47 @@
+[
+  {
+    "id": "gobekli-tepe-9600bc",
+    "year": "c. 9600 BCE",
+    "locationName": "Göbekli Tepe, Şanlıurfa Province, Turkey",
+    "clue": "On a bare limestone ridge crowning a rain-watered plateau at the headwaters of a great river system, late stone-age hunter-gatherers quarried and erected colossal T-shaped pillars carved with reliefs of animals. The site demonstrates that organised ritual and monumental construction preceded the invention of agriculture by millennia, overturning long-held assumptions about the preconditions for complex society.",
+    "hiddenCoords": { "lat": 37.2233, "lng": 38.9224 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe"
+  },
+  {
+    "id": "catalhoyuk-7500bc",
+    "year": "c. 7500 BCE",
+    "locationName": "Çatalhöyük, Konya Province, Turkey",
+    "clue": "On a low twin mound rising from a broad interior plain drained by a sluggish river, one of the ancient world's earliest large settlements flourished for over a thousand years. Its inhabitants entered their homes through holes in the roof rather than street-level doors, buried their dead beneath the earthen floors, and covered their walls in vivid painted scenes of hunts and herds. The densely packed mud-brick dwellings shared walls on all sides, leaving no streets between them.",
+    "hiddenCoords": { "lat": 37.6676, "lng": 32.8276 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/%C3%87atalh%C3%B6y%C3%BCk"
+  },
+  {
+    "id": "memphis-unification-3100bc",
+    "year": "c. 3100 BCE",
+    "locationName": "Memphis (Mit Rahina), Giza Governorate, Egypt",
+    "clue": "Where a long, narrow river valley gives way to a broad marshy delta, a ruler unified two ancient crowns for the first time — a red crown of the lowland wetlands and a white crown of the upstream desert corridor — and founded a capital city at the boundary between them. The act inaugurated one of the ancient world's longest-lasting and most prolific civilisations, whose monumental stone works still dominate the surrounding desert.",
+    "hiddenCoords": { "lat": 29.8479, "lng": 31.2507 },
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Unification_of_Egypt"
+  },
+  {
+    "id": "ziggurat-ur-2100bc",
+    "year": "c. 2100 BCE",
+    "locationName": "Ziggurat of Ur, Dhi Qar Province, Iraq",
+    "clue": "On the flat alluvial plain between the two great rivers of the ancient world, the ruler of a powerful city-state directed the construction of a massive three-tiered mudbrick platform. Broad ceremonial staircases rose to a temple at its summit, dominating a city whose royal cemetery — excavated in the modern era — yielded golden headdresses, lyres, and evidence of elaborate retainer burial rites that accompanied the deaths of its monarchs.",
+    "hiddenCoords": { "lat": 30.9621, "lng": 46.1033 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Ziggurat_of_Ur"
+  },
+  {
+    "id": "mohenjo-daro-2600bc",
+    "year": "c. 2600 BCE",
+    "locationName": "Mohenjo-daro, Sindh Province, Pakistan",
+    "clue": "In the broad flood plain of a great northwestern river system, Bronze Age city planners laid out streets on a strict cardinal grid of fired brick, equipping them with a covered underground drainage network more sophisticated than anything in the contemporary world. At the heart of the upper citadel stood a large communal bathing tank fed by wells and lined with bitumen-sealed brickwork. The civilisation's undeciphered script has resisted every attempt at translation.",
+    "hiddenCoords": { "lat": 27.3244, "lng": 68.1376 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Mohenjo-daro"
+  }
+]
