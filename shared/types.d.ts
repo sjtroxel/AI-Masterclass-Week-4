@@ -16,7 +16,7 @@ export interface Coordinates {
  */
 export interface HistoricalEvent {
   id: string;
-  year: number;
+  year: string;
   locationName: string;
   clue: string;
   hiddenCoords: Coordinates;

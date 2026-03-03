@@ -286,7 +286,7 @@ function buildGeneratorPrompt(
 Generate ONE historical event record as a JSON object with EXACTLY these fields:
 {
   "id": "<kebab-case-slug-year>",
-  "year": <integer>,
+  "year": "<year-string>",
   "locationName": "<Landmark, City, Country>",
   "clue": "<obfuscated clue text>",
   "hiddenCoords": { "lat": <number>, "lng": <number> },
@@ -296,7 +296,12 @@ Generate ONE historical event record as a JSON object with EXACTLY these fields:
 
 FIELD NOTES:
 - "id": unique kebab-case identifier, e.g. "marathon-490bc" or "moon-landing-1969"
-- "year": integer; use negative values for BCE (e.g. -490 for 490 BCE)
+- "year": string; follow the CENTURY THRESHOLD RULE:
+    • Post-1500 CE  → exact year, no suffix:          "1989", "1914", "1571"
+    • Pre-1500 CE   → add "c." prefix, no suffix:     "c. 1450", "c. 79", "c. 1066"
+    • BCE events    → year + " BCE" suffix:            "44 BCE", "490 BCE", "1274 BCE"
+    • Ancient/approx→ century-level phrase:            "c. 3rd century BCE"
+  NEVER use negative integers. NEVER append "AD" or "CE" to any year. Never omit "c." for pre-1500 CE dates.
 - "locationName": full descriptive name for the post-guess reveal, e.g. "Trafalgar Square, London, United Kingdom"
 - "source_url": a real, verifiable URL — Wikipedia preferred
 - "hiddenCoords": WGS84 decimal degrees; must be on land (or coastal water only if the event is explicitly maritime)
@@ -382,7 +387,7 @@ ${evidenceList}
 THE SAME EVENT — keep ALL fields below UNCHANGED, rewrite ONLY the "clue":
 {
   "id": "${candidate.id}",
-  "year": ${candidate.year},
+  "year": "${candidate.year}",
   "locationName": "${candidate.locationName}",
   "hiddenCoords": { "lat": ${candidate.hiddenCoords.lat}, "lng": ${candidate.hiddenCoords.lng} },
   "difficulty": "${candidate.difficulty}",
@@ -432,8 +437,8 @@ function validateSchema(raw: string): ValidationResult {
   if (typeof obj.id !== 'string' || obj.id.trim().length === 0) {
     return { valid: false, reason: 'Type error: "id" must be a non-empty string.' }
   }
-  if (typeof obj.year !== 'number' || !Number.isInteger(obj.year)) {
-    return { valid: false, reason: 'Type error: "year" must be an integer (use negative for BCE).' }
+  if (typeof obj.year !== 'string' || obj.year.trim().length === 0) {
+    return { valid: false, reason: 'Type error: "year" must be a non-empty string (e.g. "1989", "c. 490 BCE").' }
   }
   if (typeof obj.locationName !== 'string' || obj.locationName.trim().length === 0) {
     return { valid: false, reason: 'Type error: "locationName" must be a non-empty string.' }

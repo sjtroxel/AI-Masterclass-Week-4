@@ -26,11 +26,6 @@ export interface CluePanelProps {
   submitError?: string | null
 }
 
-/** Formats a year number for human display, handling BCE dates correctly. */
-function formatYear(year: number): string {
-  return year < 0 ? `${Math.abs(year)} BCE` : String(year)
-}
-
 /**
  * Difficulty badge styles — two sets so both themes remain legible.
  *
@@ -109,7 +104,7 @@ export function CluePanel({
       >
         <div className="flex items-center gap-3">
           <span className="font-clue text-xl text-text-primary font-bold">
-            {formatYear(event.year)}
+            {event.year}
           </span>
           <span
             className={`
@@ -153,7 +148,7 @@ export function CluePanel({
             {/* Year + difficulty — desktop only (mobile shows these in the handle) */}
             <div className="hidden md:flex items-center justify-between">
               <span className="font-clue text-2xl text-text-primary font-bold">
-                {formatYear(event.year)}
+                {event.year}
               </span>
               <span
                 className={`

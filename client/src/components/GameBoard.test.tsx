@@ -68,7 +68,7 @@ vi.mock('leaflet/dist/images/marker-shadow.png',  () => ({ default: 'shadow.png'
 const mockEvents: GameEvent[] = [
   {
     id: 'mock-event-001',
-    year: 1850,
+    year: '1850',
     locationName: 'Mock Location One, Test City, Test Country',
     clue: 'A sufficiently long mock clue text for test event number one, describing an event at a notable location that exceeds fifty characters.',
     difficulty: 'easy',
@@ -76,7 +76,7 @@ const mockEvents: GameEvent[] = [
   },
   {
     id: 'mock-event-002',
-    year: 1900,
+    year: '1900',
     locationName: 'Mock Location Two, Test City, Test Country',
     clue: 'A sufficiently long mock clue text for test event number two, describing an event at a notable location that exceeds fifty characters.',
     difficulty: 'medium',
@@ -84,7 +84,7 @@ const mockEvents: GameEvent[] = [
   },
   {
     id: 'mock-event-003',
-    year: 1920,
+    year: '1920',
     locationName: 'Mock Location Three, Test City, Test Country',
     clue: 'A sufficiently long mock clue text for test event number three, describing an event at a notable location that exceeds fifty characters.',
     difficulty: 'hard',
@@ -92,7 +92,7 @@ const mockEvents: GameEvent[] = [
   },
   {
     id: 'mock-event-004',
-    year: 1950,
+    year: '1950',
     locationName: 'Mock Location Four, Test City, Test Country',
     clue: 'A sufficiently long mock clue text for test event number four, describing an event at a notable location that exceeds fifty characters.',
     difficulty: 'medium',
@@ -100,7 +100,7 @@ const mockEvents: GameEvent[] = [
   },
   {
     id: 'mock-event-005',
-    year: 1975,
+    year: '1975',
     locationName: 'Mock Location Five, Test City, Test Country',
     clue: 'A sufficiently long mock clue text for test event number five, describing an event at a notable location that exceeds fifty characters.',
     difficulty: 'hard',

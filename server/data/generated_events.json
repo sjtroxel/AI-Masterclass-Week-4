@@ -1,7 +1,7 @@
 [
   {
     "id": "pompeii-eruption-79ad",
-    "year": 79,
+    "year": "c. 79",
     "locationName": "Pompeii, Campania, Italy",
     "clue": "In the shadow of a catastrophic volcanic eruption, a thriving port city and its inhabitants were instantly preserved in ash and pumice. This Roman settlement on the coast of a southern peninsula was buried so completely that it lay forgotten for centuries before systematic excavation revealed daily life frozen in time.",
     "hiddenCoords": {
@@ -13,7 +13,7 @@
   },
   {
     "id": "colossus-rhodes-280bc",
-    "year": -280,
+    "year": "280 BCE",
     "locationName": "Rhodes, Greece",
     "clue": "A bronze giant stood guard over a Mediterranean island's harbor, one of the Seven Wonders of the ancient world. Built to celebrate a successful defense against siege, this towering statue overlooked a strategic crossroads between three continents' trade routes.",
     "hiddenCoords": {
@@ -25,7 +25,7 @@
   },
   {
     "id": "gutenberg-printing-1440",
-    "year": 1440,
+    "year": "c. 1440",
     "locationName": "Mainz, Rhineland-Palatinate, Germany",
     "clue": "In a prosperous river-valley city along a major European waterway, a goldsmith and craftsman revolutionized the dissemination of knowledge by perfecting a mechanical method to reproduce text with movable metal characters. This innovation in the mid-15th century would transform scholarship and religious discourse across Christendom.",
     "hiddenCoords": {
@@ -37,7 +37,7 @@
   },
   {
     "id": "battle-of-kadesh-1274bc",
-    "year": -1274,
+    "year": "1274 BCE",
     "locationName": "Kadesh, Orontes River Valley, Syria",
     "clue": "A mighty confrontation between two Bronze Age superpowers along a great river in the Levantine interior. The clash involved chariot forces and resulted in history's first recorded peace treaty between rival empires. The location sat at a strategic crossroads between competing dynasties vying for control of the eastern Mediterranean's trade routes.",
     "hiddenCoords": {
@@ -49,7 +49,7 @@
   },
   {
     "id": "battle-lepanto-1571",
-    "year": 1571,
+    "year": "1571",
     "locationName": "Gulf of Patras, Greece",
     "clue": "A decisive naval engagement between Christian maritime powers and an expansionist Ottoman fleet, fought in a shallow gulf off the western coast of a mountainous Balkan peninsula. The victory halted Ottoman naval dominance in the eastern Mediterranean, though territorial control remained contested.",
     "hiddenCoords": {
@@ -61,7 +61,7 @@
   },
   {
     "id": "zheng-he-voyage-1405",
-    "year": 1405,
+    "year": "c. 1405",
     "locationName": "Nanjing, Jiangsu Province, China",
     "hiddenCoords": {
       "lat": 32.0603,
@@ -73,7 +73,7 @@
   },
   {
     "id": "library-alexandria-48bc",
-    "year": -48,
+    "year": "48 BCE",
     "locationName": "Bibliotheca Alexandrina, Alexandria, Egypt",
     "hiddenCoords": {
       "lat": 31.2157,
@@ -85,7 +85,7 @@
   },
   {
     "id": "zheng-he-malindi-1418",
-    "year": 1418,
+    "year": "c. 1418",
     "locationName": "Malindi, Kenya",
     "hiddenCoords": {
       "lat": -3.2167,
@@ -97,7 +97,7 @@
   },
   {
     "id": "siege-of-szigetvár-1566",
-    "year": 1566,
+    "year": "1566",
     "locationName": "Szigetvár Fortress, Somogy County, Hungary",
     "clue": "A heavily fortified stronghold on the frontier between two rival empires fell after a grueling siege lasting over a month. The defending commander chose a final charge rather than surrender, and his death marked a symbolic victory for the attacking power despite heavy losses. The fortress lay in a marshland region of a landlocked Central European territory, at a critical chokepoint where the empire's expansion was checked.",
     "hiddenCoords": {
@@ -109,7 +109,7 @@
   },
   {
     "id": "tegucigalpa-coup-2009",
-    "year": 2009,
+    "year": "2009",
     "locationName": "Toncontín International Airport, Tegucigalpa, Honduras",
     "clue": "A democratically elected leader was forcibly removed from power in this Central American nation and exiled abroad. The military's swift action at the country's primary international airport marked a pivotal moment in early 21st-century regional politics, sparking international condemnation and constitutional crisis.",
     "hiddenCoords": {

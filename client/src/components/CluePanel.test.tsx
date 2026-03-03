@@ -8,7 +8,7 @@ import { CluePanel } from './CluePanel'
 
 const testEvent = {
   id: 'test-clue-event',
-  year: 1989,
+  year: '1989',
   locationName: 'Test Location, Test Country',
   clue: 'On a November night, jubilant crowds dismantled a concrete barrier that had divided a once-great central European capital for nearly three decades.',
   difficulty: 'medium' as const,
@@ -92,8 +92,8 @@ describe('CluePanel', () => {
     expect(screen.getByText('Network error — please try again.')).toBeTruthy()
   })
 
-  it('formats BCE years correctly', () => {
-    const bceEvent = { ...testEvent, year: -490 }
+  it('renders BCE year strings correctly', () => {
+    const bceEvent = { ...testEvent, year: '490 BCE' }
     withTheme(<CluePanel event={bceEvent} hasPin={false} onSubmit={vi.fn()} />)
     const bceEls = screen.getAllByText('490 BCE')
     expect(bceEls.length).toBeGreaterThan(0)
