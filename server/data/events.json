@@ -88,5 +88,41 @@
     "hiddenCoords": { "lat": -13.1631, "lng": -72.545 },
     "difficulty": "hard",
     "source_url": "https://en.wikipedia.org/wiki/Machu_Picchu"
+  },
+  {
+    "id": "giza-pyramids-2560bc",
+    "year": "c. 2560 BCE",
+    "locationName": "Giza Necropolis, Giza, Egypt",
+    "clue": "On a limestone plateau at the edge of an immense desert, tens of thousands of workers organised into rotating labour teams spent decades quarrying and hauling millions of cut stone blocks to build a set of monumental royal tombs aligned with astronomical precision — creating structures so vast they remained the tallest objects made by human hands for nearly four thousand years.",
+    "hiddenCoords": { "lat": 29.9792, "lng": 31.1342 },
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Giza_pyramid_complex"
+  },
+  {
+    "id": "waterloo-1815",
+    "year": "1815",
+    "locationName": "Waterloo, Belgium",
+    "clue": "On a rolling agricultural plateau south of a major northern trading hub, two armies — one commanded by a recently escaped island exile, the other by a coalition of allied European powers — clashed in driving rain across fields of rye, ending two decades of continental warfare and consigning the defeated commander to permanent exile on a remote island in the southern ocean.",
+    "hiddenCoords": { "lat": 50.6797, "lng": 4.4120 },
+    "difficulty": "medium",
+    "source_url": "https://en.wikipedia.org/wiki/Battle_of_Waterloo"
+  },
+  {
+    "id": "constantinople-1453",
+    "year": "1453",
+    "locationName": "Hagia Sophia, Istanbul, Turkey",
+    "clue": "After a fifty-three-day siege, the forces of a rising eastern empire breached the ancient land walls of a city that had served as the capital of a Christian realm for over a thousand years — ending the last remnant of a once-vast empire and converting its great domed basilica into a place of Islamic worship, an event historians mark as the close of the medieval age.",
+    "hiddenCoords": { "lat": 41.0086, "lng": 28.9802 },
+    "difficulty": "hard",
+    "source_url": "https://en.wikipedia.org/wiki/Fall_of_Constantinople"
+  },
+  {
+    "id": "taj-mahal-1653",
+    "year": "c. 1653",
+    "locationName": "Taj Mahal, Agra, India",
+    "clue": "On a sweeping bend of a wide river in a vast alluvial plain, a grief-stricken emperor commanded twenty thousand craftsmen to spend two decades raising a mausoleum of white marble for his favourite wife — its perfect bilateral symmetry and flanking minarets reflected in a long ornamental pool, drawing artisans from across the known world and blending classical West Asian, imperial, and indigenous architectural traditions into what poets called the jewel set in the forehead of the earth.",
+    "hiddenCoords": { "lat": 27.1751, "lng": 78.0421 },
+    "difficulty": "easy",
+    "source_url": "https://en.wikipedia.org/wiki/Taj_Mahal"
   }
 ]

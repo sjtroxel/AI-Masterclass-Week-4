@@ -7,11 +7,11 @@ import { FinalScoreScreen } from './FinalScoreScreen'
 // identically across all locales (no thousands separator ambiguity).
 
 const roundHistory = [
-  { score: 150, distance: 1200 },
-  { score: 120, distance: 1800 },
-  { score: 100, distance: 2400 },
-  { score: 80,  distance: 3600 },
-  { score: 50,  distance: 5000 },
+  { score: 150, distance: 1200, locationName: 'Test Location A' },
+  { score: 120, distance: 1800, locationName: 'Test Location B' },
+  { score: 100, distance: 2400, locationName: 'Test Location C' },
+  { score: 80,  distance: 3600, locationName: 'Test Location D' },
+  { score: 50,  distance: 5000, locationName: 'Test Location E' },
 ]
 
 const totalScore = 500 // must equal sum of roundHistory scores

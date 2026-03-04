@@ -1,5 +1,20 @@
 import Logo from './Logo'
 
+function getGrade(score: number): string {
+  if (score >= 24950) return 'Super Seismic Champion'
+  if (score >= 24500) return 'The Omniscient Chronicler'
+  if (score >= 24000) return 'Grand Cartographer'
+  if (score >= 23000) return 'Master Navigator'
+  if (score >= 22000) return 'Royal Geographer'
+  if (score >= 20000) return 'Seasoned Explorer'
+  if (score >= 18000) return 'Veteran Historian'
+  if (score >= 15000) return 'Accomplished Scholar'
+  if (score >= 10000) return 'Apprentice Archivist'
+  if (score >= 5000)  return 'Wandering Scribe'
+  if (score >= 1000)  return 'Lost Traveller'
+  return 'Bewildered Stupid Tourist'
+}
+
 // ─── Chronicler audit note ────────────────────────────────────────────────────
 // This component receives only scores and distances — no coordinates, no event
 // ids. All data here is post-guess and fully safe to display. The "Round
@@ -10,6 +25,7 @@ import Logo from './Logo'
 interface RoundEntry {
   score: number
   distance: number
+  locationName: string
 }
 
 interface FinalScoreScreenProps {
@@ -43,6 +59,9 @@ export function FinalScoreScreen({ totalScore, roundHistory, onPlayAgain }: Fina
           </p>
           <p className="font-clue text-text-primary text-6xl font-bold leading-none">
             {totalScore.toLocaleString()}
+          </p>
+          <p className="font-ui text-accent text-sm tracking-widest uppercase">
+            {getGrade(totalScore)}
           </p>
           <p className="font-ui text-text-muted text-sm">
             out of 25,000 points
@@ -83,7 +102,10 @@ export function FinalScoreScreen({ totalScore, roundHistory, onPlayAgain }: Fina
               {roundHistory.map((entry, i) => (
                 <tr key={i} className={i % 2 === 0 ? 'bg-bg-surface' : ''}>
                   <td className="py-2 pl-2 text-text-muted">
-                    Round {i + 1}
+                    <span className="block">Round {i + 1}</span>
+                    <span className="block text-xs text-text-dim truncate max-w-36">
+                      {entry.locationName}
+                    </span>
                   </td>
                   <td className="py-2 text-right text-text-muted">
                     {entry.distance} km

@@ -62,7 +62,7 @@ export function GameBoard() {
   // Per-round history for FinalScoreScreen breakdown table.
   // Appended inside handleNextRound() before any phase transition so that
   // round 5's entry is captured even when transitioning directly to 'finished'.
-  const [roundHistory, setRoundHistory] = useState<Array<{ score: number; distance: number }>>([])
+  const [roundHistory, setRoundHistory] = useState<Array<{ score: number; distance: number; locationName: string }>>([])
   // Shown inline in CluePanel when the POST /api/game/guess request fails.
   // Cleared on the next submission attempt and on round transitions.
   // Does NOT trigger gamePhase='error' — the round stays live so the player
@@ -154,7 +154,11 @@ export function GameBoard() {
     // This guarantees round 5's entry is captured when isFinalRound is true
     // and we transition directly to 'finished' without another render cycle.
     if (roundResult !== null) {
-      setRoundHistory((prev) => [...prev, { score: roundResult.score, distance: roundResult.distance }])
+      setRoundHistory((prev) => [...prev, {
+        score: roundResult.score,
+        distance: roundResult.distance,
+        locationName: currentEvent?.locationName ?? '',
+      }])
     }
 
     if (currentRound >= session.length - 1) {
